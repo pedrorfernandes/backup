@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -45,28 +46,32 @@ int printContents(DIR * backupDir){
 int main(int argc, const char * argv[])
 {
 
-    // usage: rstr dir1 dir2
+    // usage: rstr dir2 dir3
     if (argc != 3){
-        fprintf( stderr, "Usage: %s dir_with_files dir_backup\n", argv[0]);
+        fprintf( stderr, "Usage: %s dir_backup dir_restore\n", argv[0]);
         exit(1);
     }
     
-    DIR *filesDir;
     DIR *backupDir;
+    DIR *restoreDir;
 
-    if ( (filesDir = opendir( argv[1]) ) == NULL) {
+    if ( (backupDir = opendir( argv[1]) ) == NULL) {
         perror(argv[1]);
         exit(2);
     }
     
-    if ( (backupDir = opendir( argv[2]) ) == NULL) {
-        perror(argv[2]);
-        exit(3);
+    if ( (restoreDir = opendir( argv[2]) ) == NULL) {
+        // if restore dir doesnt exist, create it
+        mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if ( (restoreDir = opendir( argv[2]) ) == NULL) {
+            perror(argv[1]);
+            exit(2);
+        }
     }
     
     printf("The following restore points are available:\n");
     printf("(year_month_day_hours_minutes_seconds)\n");
-    chdir(argv[2]); // this avoids any errors with stat()
+    chdir(argv[1]); // this avoids any errors with stat()
     printContents(backupDir);
     printf("Which restore point?\n%s", PROMPT);
     getchar();
