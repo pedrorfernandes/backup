@@ -5,8 +5,12 @@ build/*
 *~.nib
 *.swp
  
-# Exclude OS X folder attributes
+#OS crap
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
  
 # Exclude user-specific XCode 3 and 4 files
 *.mode1
