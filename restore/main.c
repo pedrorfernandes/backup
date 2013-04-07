@@ -19,8 +19,8 @@
 int main(int argc, const char * argv[])
 {
 
-    // insert code here...
-    printf("Hello, World!\n");
+    // check arguments
+    
     return 0;
 }
 
