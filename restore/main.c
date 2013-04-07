@@ -22,10 +22,53 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define PROMPT "> "
+#define DATE_LEN 20
+#define MAX_LEN 1024
+#define BACKUP_INFO_LEN 33
+#define BACKUPINFO "__bckpinfo__"
 
-int printContents(DIR * backupDir){
+struct BackupInfo {
+    char date[DATE_LEN];
+    char filename[MAX_LEN];
+    char path[MAX_LEN];
+};
+
+int getNumOfLines(const char * filePath){
+    int file;
+    file = open(filePath, O_RDONLY);
+    if (file == -1){
+        perror(filePath);
+        exit(5);
+    }
+    unsigned char ch[1];
+    int number_of_lines = 1;
+
+	while ( read(file, ch, 1) > 0){
+        if( ch[0] == '\n') number_of_lines++;
+    }
+    
+    return number_of_lines;
+}
+
+int* getBackupInfo(const char * restoreDate){
+    DIR *backupFolder;
+    if ( (backupFolder = opendir(restoreDate) ) == NULL) {
+        perror(restoreDate);
+        exit(4);
+    }
+    
+    char backupInfoPath[BACKUP_INFO_LEN];
+    sprintf(backupInfoPath, "%s/%s", restoreDate, BACKUPINFO);
+    struct BackupInfo files [ getNumOfLines(backupInfoPath) ];
+    
+    
+    
+}
+
+int printFolders(DIR * backupDir){
     struct dirent *direntp;
     struct stat stat_buf;
 
@@ -36,7 +79,9 @@ int printContents(DIR * backupDir){
             return -1;
         }
         if (S_ISDIR(stat_buf.st_mode)
-            && strcmp(direntp->d_name, ".") && strcmp(direntp->d_name, "..") )
+            // and ignore the "." and ".."
+            && strcmp(direntp->d_name, ".")
+            && strcmp(direntp->d_name, "..") )
             printf("%-25s\n", direntp->d_name);
     }
     
@@ -65,16 +110,21 @@ int main(int argc, const char * argv[])
         mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         if ( (restoreDir = opendir( argv[2]) ) == NULL) {
             perror(argv[1]);
-            exit(2);
+            exit(3);
         }
     }
     
     printf("The following restore points are available:\n");
     printf("(year_month_day_hours_minutes_seconds)\n");
     chdir(argv[1]); // this avoids any errors with stat()
-    printContents(backupDir);
+    printFolders(backupDir);
+
     printf("Which restore point?\n%s", PROMPT);
-    getchar();
+    char restoreDate[DATE_LEN];
+    scanf("%s", restoreDate);
+    
+    getBackupInfo(restoreDate);
+    
     
     return 0;
 }
