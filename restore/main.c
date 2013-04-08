@@ -105,7 +105,7 @@ char* getLineAt ( unsigned int line, const char * filePath )
         exit ( 5 );
     }
 
-    char str[MAX_LEN];
+    char * str = malloc(MAX_LEN * sizeof(char) );
 
     int n = 0;
     while ( n != line ) {
@@ -117,14 +117,13 @@ char* getLineAt ( unsigned int line, const char * filePath )
 }
 
 char* getBackupInfo ( const char* restoreDate ) {
-    char backupInfoPath[MAX_LEN];
+    char * backupInfoPath = malloc(MAX_LEN * sizeof(char) );
     sprintf ( backupInfoPath, "%s/%s", restoreDate, BACKUPINFO );
     return backupInfoPath;
 }
 
 char* getBackupFullPath (const char* path, const char* backupPath ) {
-  
-    char backupFullPath[MAX_LEN];
+    char * backupFullPath = malloc(MAX_LEN * sizeof(char) );
     sprintf ( backupFullPath, "%s/%s", path, backupPath );
     return backupFullPath;
 }
@@ -216,7 +215,7 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
   int i = DATE_LEN + 1; //TODO apparently the date finds an extra \n somewhere, that should probably be fixed to avoid these magic sums
   int j = 0;
   
-  for(i, j; bckpInfoLine[i] != '\n'; i++, j++) {
+  for( ; bckpInfoLine[i] != '\n'; i++, j++) {
     fileName[j] = bckpInfoLine[i];
   }
   
@@ -229,7 +228,7 @@ int showBackupInfo(const char* bckpInfoPath) {
   char* infoLine;
   
   int i = 1;
-  for(i; i < numberOfFiles+1; i++) {
+  for( ; i < numberOfFiles+1; i++) {
     
     printf("%d- ", i);
     
@@ -285,10 +284,10 @@ int main ( int argc, const char * argv[] )
     int lineNumber = lineSelection - '0';
     
     char* selectedBckpPath = getBackupFullPath(argv[1], backups[lineNumber]);
-    chdir(selectedBckpPath);
-    
+    chdir("..");
+        
     //Super testing printf
-    printf("Selected backup path:\n\n%s\n", selectedBckpPath);
+    //printf("Selected backup path:\n\n%s\n", selectedBckpPath);
     
     DIR *selectedBackup;
 
