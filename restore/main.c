@@ -215,7 +215,7 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
   int i = DATE_LEN + 1; //TODO apparently the date finds an extra \n somewhere, that should probably be fixed to avoid these magic sums
   int j = 0;
   
-  for( ; bckpInfoLine[i] != '\n' && i < fileNameSize; i++, j++) {
+  for( ; j < fileNameSize && bckpInfoLine[i] != '\n'; i++, j++) {
     fileName[j] = bckpInfoLine[i];
   }
   
