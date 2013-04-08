@@ -105,7 +105,7 @@ char* getLineAt ( unsigned int line, const char * filePath )
         exit ( 5 );
     }
 
-    char str[MAX_LEN];
+    char * str = malloc(MAX_LEN * sizeof(char));
 
     int n = 0;
     while ( n != line ) {
@@ -117,15 +117,15 @@ char* getLineAt ( unsigned int line, const char * filePath )
 }
 
 char* getBackupInfo ( const char* restoreDate ) {
-    char backupInfoPath[MAX_LEN];
+    char * backupInfoPath = malloc(MAX_LEN * sizeof(char));
     sprintf ( backupInfoPath, "%s/%s", restoreDate, BACKUPINFO );
     return backupInfoPath;
 }
 
-char* getBackupFullPath (const char* path, const char* backupPath ) {
+char* getBackupFolder (const char* backupPath ) {
   
-    char backupFullPath[MAX_LEN];
-    sprintf ( backupFullPath, "%s/%s", path, backupPath );
+    char * backupFullPath = malloc(MAX_LEN * sizeof(char));
+    sprintf ( backupFullPath, "%s", backupPath );
     return backupFullPath;
 }
 
@@ -151,7 +151,7 @@ char** getAndPrintFolders ( DIR * backupDir )
                 && strcmp ( direntp->d_name, "." )
                 && strcmp ( direntp->d_name, ".." ) ) {
             sprintf (backups[n], "%s", direntp->d_name );
-            printf ( "%d- %-25s\n", n, direntp->d_name );
+            printf ( "%d - %-25s\n", n+1, direntp->d_name );
             n++;
         }
     }
@@ -160,6 +160,18 @@ char** getAndPrintFolders ( DIR * backupDir )
     return backups;
 }
 
+static void call_getcwd(){
+    char * cwd;
+    cwd = getcwd (0, 0);
+    if (! cwd) {
+        fprintf (stderr, "getcwd failed: %s\n", strerror (errno));
+    } else {
+        printf ("%s\n", cwd);
+        free (cwd);
+    }
+}
+
+
 int printFiles (DIR * backupDir) {
     //TODO this only prints the files in the backup folder, we need it to print the files on the __bckpinfo__ instead!!!
   
@@ -167,16 +179,13 @@ int printFiles (DIR * backupDir) {
     struct stat stat_buf;
 
     int n = 1;
-
+    
     while ( ( direntp = readdir ( backupDir ) ) != NULL ) {
         if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
-            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
+            printf ( "%s: %s\n", direntp->d_name, strerror ( errno ) );
             return -1;
         }
         if ( S_ISREG ( stat_buf.st_mode )
-                // and ignore the "." and ".."
-                && strcmp ( direntp->d_name, "." )
-                && strcmp ( direntp->d_name, ".." )
                 && strcmp ( direntp->d_name, BACKUPINFO ) ) {
             printf ( "%d- %-25s\n", n, direntp->d_name );
             n++;
@@ -217,26 +226,36 @@ int main ( int argc, const char * argv[] )
 
     printf ( "The following restore points are available:\n" );
     printf ( "(year_month_day_hours_minutes_seconds)\n" );
-    chdir ( argv[1] ); // this avoids any errors with stat()
+    
+    // this avoids any errors with stat()
+    if ( chdir(argv[1]) != 0 ){
+        perror(argv[1]);
+        exit(7);
+    }
 
     char** backups = getAndPrintFolders ( backupDir );
 
     printf ( "Which restore point?\n%s", PROMPT );
-
+    
     char lineSelection = getchar();
     int lineNumber = lineSelection - '0';
+    lineNumber--;
     
-    char* selectedBckpPath = getBackupFullPath(argv[1], backups[lineNumber]);
-    chdir(selectedBckpPath);
+    char* selectedBckpFolder = getBackupFolder(backups[lineNumber]);
     
     //Super testing printf
-    printf("Selected backup path:\n\n%s\n", selectedBckpPath);
+    //printf("Selected backup path:\n\n%s\n", selectedBckpPath);
     
     DIR *selectedBackup;
-
-    if ( ( selectedBackup = opendir ( selectedBckpPath ) ) == NULL ) {
-        perror ( selectedBckpPath );
+    
+    if ( ( selectedBackup = opendir ( selectedBckpFolder ) ) == NULL ) {
+        perror ( selectedBckpFolder );
         exit ( 2 );
+    }
+    
+    if ( chdir(selectedBckpFolder) != 0 ){
+        perror(selectedBckpFolder);
+        exit(6);
     }
     
     printf ( "This backup contains the following files:\n" );
@@ -252,7 +271,7 @@ int main ( int argc, const char * argv[] )
     
     //TODO copy that file
     
-    printf("\n\n%s restored!", getLineAt(lineNumber, getBackupInfo(selectedBckpPath)));
+    printf("\n\n%s restored!", getLineAt(lineNumber, getBackupInfo(selectedBckpFolder)));
     
 
     return 0;
