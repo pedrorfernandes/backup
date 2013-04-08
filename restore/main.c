@@ -161,7 +161,7 @@ char** getAndPrintFolders ( DIR * backupDir )
 }
 
 int printFiles (DIR * backupDir) {
-    //TODO this only prints the files in the backup folder, we need it to print the files on the __bckpinfo__ instead!!!
+    //This only prints the files in the backup folder, use showBackupInfo to print the bckpInfo file
   
     struct dirent *direntp;
     struct stat stat_buf;
@@ -186,7 +186,65 @@ int printFiles (DIR * backupDir) {
     rewinddir ( backupDir );
     return 0;
 }
+
+char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
+  
+  if(strlen(bckpInfoLine) < DATE_LEN) {
+    return NULL;
+  }
+  
+  //TODO fix these possible mem leaks!!!
+  char* backupPath = malloc(DATE_LEN);
+  
+  memcpy(backupPath, bckpInfoLine, DATE_LEN);
+  
+  return backupPath;
+}
+
+char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
+  
+  if(strlen(bckpInfoLine) <= DATE_LEN) {
+    printf("filename OOPS\n");
+    return NULL;
+  }
+  
+  int fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 1);
+  
+  //TODO fix these possible mem leaks!!!
+  char* fileName = malloc(fileNameSize);
+  
+  int i = DATE_LEN + 1; //TODO apparently the date finds an extra \n somewhere, that should probably be fixed to avoid these magic sums
+  int j = 0;
+  
+  for(i, j; bckpInfoLine[i] != '\n'; i++, j++) {
+    fileName[j] = bckpInfoLine[i];
+  }
+  
+  return fileName;
+}
+
+int showBackupInfo(const char* bckpInfoPath) {
+  
+  int numberOfFiles = getNumOfLines(bckpInfoPath);
+  char* infoLine;
+  
+  int i = 1;
+  for(i; i < numberOfFiles+1; i++) {
     
+    printf("%d- ", i);
+    
+    if( ( infoLine = getLineAt(i, bckpInfoPath) ) == NULL) {
+      printf("Error reading line from __bckpinfo__\n");
+      return -1;
+    }
+    
+    
+    printf("%s - backed up at %s\n", extractFileNameFromInfoLine(infoLine), extractBackupPathFromInfoLine(infoLine));
+    
+  }
+  
+  return 0;
+}    
   
 
 int main ( int argc, const char * argv[] )
@@ -240,7 +298,8 @@ int main ( int argc, const char * argv[] )
     }
     
     printf ( "This backup contains the following files:\n" );
-    printFiles(selectedBackup);
+    //printFiles(selectedBackup);
+    showBackupInfo(getBackupInfo(selectedBckpPath));
     
     printf("\nSelect a file to restore (0 to restore all): \n");
     
