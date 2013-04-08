@@ -351,30 +351,31 @@ int main ( int argc, const char * argv[] )
     lineNumber = convertToUnsignedInt(lineSelection);
     
     //TODO Cancel on 0 or invalid number
-    if(lineNumber == getNumOfLines(fullBckpInfoPath)+1) {
-      
-      printf("Doing full restore!\n");
-      return 0;
-      
-      int i = 1;
+    if ( lineNumber == getNumOfLines ( fullBckpInfoPath ) +1 ) {
+
+        printf ( "Doing full restore!\n" );
+
+        int i = 1;
         for ( ; i <= getNumOfLines ( fullBckpInfoPath ); i++ ) {
-	  //TODO fix this
-	    char* fileRestorePath = getLineAt (i, fullBckpInfoPath);
-            char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine(fileRestorePath) );
+            //TODO fix this
+            char* fileRestorePath = getLineAt ( i, fullBckpInfoPath );
+            char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( fileRestorePath ) );
             char* originFilePath = getFileFullPath ( argv[1], fileRestorePath );
-            copyFile ( originFilePath, destFilePath );
+            if(copyFile ( originFilePath, destFilePath ) == 0)
+	      printf("\nRestored %s successfully!\n", extractFileNameFromInfoLine ( fileRestorePath ));
+	    else
+	      printf("\nError copying %s!\n", extractFileNameFromInfoLine ( fileRestorePath ));
         }
-      
+
+    } else if ( lineNumber != 0 ) {
+        char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( getLineAt ( lineNumber, fullBckpInfoPath ) ) );
+        char* originFilePath = getFileFullPath ( argv[1], getLineAt ( lineNumber, fullBckpInfoPath ) );
+        copyFile ( originFilePath, destFilePath );
+
+        printf ( "\n%s restored!\n", getLineAt ( lineNumber, fullBckpInfoPath ) );
     }
     
-    //TODO copy that file
-    char* destFilePath = getFileFullPath(argv[2], extractFileNameFromInfoLine(getLineAt(lineNumber, fullBckpInfoPath)));
-    char* originFilePath = getFileFullPath(argv[1], getLineAt(lineNumber, fullBckpInfoPath));
-    copyFile(originFilePath, destFilePath);
-    
-    printf("\n%s restored!\n", getLineAt(lineNumber, fullBckpInfoPath));
-    
-
+    printf("\nRestore finished!\n");
     return 0;
 }
 
