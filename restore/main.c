@@ -194,7 +194,7 @@ char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
   }
   
   //TODO fix these possible mem leaks!!!
-  char* backupPath = malloc(DATE_LEN);
+  char* backupPath = malloc( DATE_LEN * sizeof(char) );
   
   memcpy(backupPath, bckpInfoLine, DATE_LEN);
   
@@ -211,7 +211,7 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
   int fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 1);
   
   //TODO fix these possible mem leaks!!!
-  char* fileName = malloc(fileNameSize);
+  char* fileName = malloc( fileNameSize * sizeof(char) );
   
   int i = DATE_LEN + 1; //TODO apparently the date finds an extra \n somewhere, that should probably be fixed to avoid these magic sums
   int j = 0;
