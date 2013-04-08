@@ -117,7 +117,7 @@ char* getLineAt ( unsigned int line, const char * filePath )
 }
 
 char* getBackupInfo ( const char* restoreDate ) {
-    char backupInfoPath[BACKUP_INFO_LEN];
+    char backupInfoPath[MAX_LEN];
     sprintf ( backupInfoPath, "%s/%s", restoreDate, BACKUPINFO );
     return backupInfoPath;
 }
@@ -161,6 +161,8 @@ char** getAndPrintFolders ( DIR * backupDir )
 }
 
 int printFiles (DIR * backupDir) {
+    //TODO this only prints the files in the backup folder, we need it to print the files on the __bckpinfo__ instead!!!
+  
     struct dirent *direntp;
     struct stat stat_buf;
 
@@ -174,7 +176,8 @@ int printFiles (DIR * backupDir) {
         if ( S_ISREG ( stat_buf.st_mode )
                 // and ignore the "." and ".."
                 && strcmp ( direntp->d_name, "." )
-                && strcmp ( direntp->d_name, ".." ) ) {
+                && strcmp ( direntp->d_name, ".." )
+                && strcmp ( direntp->d_name, BACKUPINFO ) ) {
             printf ( "%d- %-25s\n", n, direntp->d_name );
             n++;
         }
@@ -224,6 +227,7 @@ int main ( int argc, const char * argv[] )
     int lineNumber = lineSelection - '0';
     
     char* selectedBckpPath = getBackupFullPath(argv[1], backups[lineNumber]);
+    chdir(selectedBckpPath);
     
     //Super testing printf
     printf("Selected backup path:\n\n%s\n", selectedBckpPath);
@@ -237,8 +241,19 @@ int main ( int argc, const char * argv[] )
     
     printf ( "This backup contains the following files:\n" );
     printFiles(selectedBackup);
-
-   // printf ( "%s\n", getLineAt ( lineNumber, getBackupInfo ( backups[lineNumber] ) ) );
+    
+    printf("\nSelect a file to restore (0 to restore all): \n");
+    
+    //It's reading an extra \n from somewhere, apparently. This temporarily solves it
+    getchar();
+    
+    lineSelection = getchar();
+    lineNumber = lineSelection - '0';
+    
+    //TODO copy that file
+    
+    printf("\n\n%s restored!", getLineAt(lineNumber, getBackupInfo(selectedBckpPath)));
+    
 
     return 0;
 }
