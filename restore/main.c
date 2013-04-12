@@ -226,7 +226,7 @@ char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
 char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
   
   if(strlen(bckpInfoLine) <= DATE_LEN) {
-    perror("Invalid filename\n");
+    fprintf(stderr, "Invalid filename\n");
     return NULL;
   }
   
@@ -307,7 +307,7 @@ int main ( int argc, const char * argv[] )
         // if restore dir doesnt exist, create it
         mkdir ( argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
         if ( ( restoreDir = opendir ( argv[2] ) ) == NULL ) {
-            perror ( argv[1] );
+            perror ( argv[2] );
             exit ( 3 );
         }
     }
