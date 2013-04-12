@@ -226,11 +226,11 @@ char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
 char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
   
   if(strlen(bckpInfoLine) <= DATE_LEN) {
-    printf("filename OOPS\n");
+    perror("Invalid filename\n");
     return NULL;
   }
   
-  int fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 1);
+  unsigned long fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 1);
   
   //TODO fix these possible mem leaks!!!
   char* fileName = malloc( fileNameSize * sizeof(char) );
@@ -314,21 +314,22 @@ int main ( int argc, const char * argv[] )
 
     printf ( "The following restore points are available:\n" );
     printf ( "(year_month_day_hours_minutes_seconds)\n" );
-    chdir ( argv[1] ); // this avoids any errors with stat()
+    // moving into backupDir will allow directory reading
+    chdir ( argv[1] ); 
 
     char** backups = getAndPrintFolders ( backupDir );
 
     printf ( "Which restore point?\n%s", PROMPT );
 
+    // TODO input verification
     char lineSelection = getchar();
     int lineNumber = convertToUnsignedInt(lineSelection);
     
     char* selectedBckpPath = getBackupFullPath(argv[1], backups[lineNumber]);
     char* fullBckpInfoPath = getBackupInfo(selectedBckpPath);
+    
+    // moving out of the backupDir
     chdir("..");
-        
-    //Super testing printf
-    //printf("Selected backup path:\n\n%s\n", selectedBckpPath);
     
     DIR *selectedBackup;
 
@@ -344,7 +345,7 @@ int main ( int argc, const char * argv[] )
     
     printf("\nSelect a file to restore (0 to cancel):\n%s", PROMPT);
     
-    //It's reading an extra \n from somewhere, apparently. This temporarily solves it
+    // TODO It's reading an extra \n from somewhere, apparently. This temporarily solves it
     getchar();
     
     lineSelection = getchar();
@@ -354,18 +355,25 @@ int main ( int argc, const char * argv[] )
     if ( lineNumber == getNumOfLines ( fullBckpInfoPath ) +1 ) {
 
         printf ( "Doing full restore!\n" );
-
+        char* fileRestorePath;
+        char* destFilePath;
+        char* originFilePath;
+        
         int i = 1;
         for ( ; i <= getNumOfLines ( fullBckpInfoPath ); i++ ) {
             //TODO fix this
-            char* fileRestorePath = getLineAt ( i, fullBckpInfoPath );
-            char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( fileRestorePath ) );
-            char* originFilePath = getFileFullPath ( argv[1], fileRestorePath );
+            fileRestorePath = getLineAt ( i, fullBckpInfoPath );
+            destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( fileRestorePath ) );
+            originFilePath = getFileFullPath ( argv[1], fileRestorePath );
             if(copyFile ( originFilePath, destFilePath ) == 0)
 	      printf("\nRestored %s successfully!\n", extractFileNameFromInfoLine ( fileRestorePath ));
 	    else
 	      printf("\nError copying %s!\n", extractFileNameFromInfoLine ( fileRestorePath ));
         }
+        
+        free(fileRestorePath);
+        free(destFilePath);
+        free(originFilePath);
 
     } else if ( lineNumber != 0 ) {
         char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( getLineAt ( lineNumber, fullBckpInfoPath ) ) );
@@ -373,7 +381,21 @@ int main ( int argc, const char * argv[] )
         copyFile ( originFilePath, destFilePath );
 
         printf ( "\n%s restored!\n", getLineAt ( lineNumber, fullBckpInfoPath ) );
+        
+        free(destFilePath);
+        free(originFilePath);
     }
+    
+    // TODO the char** backups generating function must return a size so we can free the memory
+    /*
+    for ( i = 0 ; i < numberOfStrings; ++i ) {
+        free(strArray[i]);
+    }
+     */
+    
+    // clean up the strings
+    free(selectedBckpPath);
+    free(fullBckpInfoPath);    
     
     printf("\nRestore finished!\n");
     return 0;
