@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		EB1677FD1711C42A000794A9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = EB1677FC1711C42A000794A9 /* main.c */; };
 		EB1677FF1711C42A000794A9 /* restore.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = EB1677FE1711C42A000794A9 /* restore.1 */; };
+		EB23C71E1719968700A443FA /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = EB23C71D1719968700A443FA /* utilities.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,8 @@
 		EB1677F91711C42A000794A9 /* restore */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = restore; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB1677FC1711C42A000794A9 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		EB1677FE1711C42A000794A9 /* restore.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = restore.1; sourceTree = "<group>"; };
+		EB23C71D1719968700A443FA /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
+		EB23C71F1719993700A443FA /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +49,7 @@
 			children = (
 				EB1677FB1711C42A000794A9 /* restore */,
 				EB1677FA1711C42A000794A9 /* Products */,
+				EB23C718171994B400A443FA /* utilities */,
 			);
 			sourceTree = "<group>";
 		};
@@ -64,6 +68,15 @@
 				EB1677FE1711C42A000794A9 /* restore.1 */,
 			);
 			path = restore;
+			sourceTree = "<group>";
+		};
+		EB23C718171994B400A443FA /* utilities */ = {
+			isa = PBXGroup;
+			children = (
+				EB23C71F1719993700A443FA /* utilities.h */,
+				EB23C71D1719968700A443FA /* utilities.c */,
+			);
+			path = utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -118,6 +131,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EB1677FD1711C42A000794A9 /* main.c in Sources */,
+				EB23C71E1719968700A443FA /* utilities.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

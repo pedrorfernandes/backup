@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include "../utilities/utilities.h"
+
 #define DATE_LEN 20
 
 // this will wait for all child processes and shutdown
@@ -68,10 +70,10 @@ char* timeStructToBackupDate(time_t time){
     return dateStr;
 }
 
-time_t backupDateToTimeStruct(char * backupdate){
+time_t backupDateToTimeStruct(char * backupDate){
     struct tm date;
     int year, mon;
-    sscanf(backupdate, "%04d_%02d_%02d_%02d_%02d_%02d",
+    sscanf(backupDate, "%04d_%02d_%02d_%02d_%02d_%02d",
            &year,
            &mon,
            &date.tm_mday,
