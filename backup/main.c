@@ -65,7 +65,6 @@ char* timeStructToBackupDate(time_t time){
            date->tm_min,
            date->tm_sec);
     
-    free(date);
     return dateStr;
 }
 
