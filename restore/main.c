@@ -24,12 +24,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define PROMPT "> "
-#define DATE_LEN 20
-#define MAX_LEN 1024
-#define BACKUP_INFO_LEN 33
-#define BACKUPINFO "__bckpinfo__"
-
 #include "../utilities/utilities.h"
 
 char** getAndPrintFolders ( DIR * backupDir )
@@ -78,9 +72,8 @@ int printFiles (DIR * backupDir) {
             return -1;
         }
         if ( S_ISREG ( stat_buf.st_mode )
-                // and ignore the "." and ".."
-                && strcmp ( direntp->d_name, "." )
-                && strcmp ( direntp->d_name, ".." )
+                // ignore ".hidden" files
+                && strncmp(direntp->d_name, ".", 1)
                 && strcmp ( direntp->d_name, BACKUPINFO ) ) {
             printf ( "%d- %-25s\n", n, direntp->d_name );
             n++;

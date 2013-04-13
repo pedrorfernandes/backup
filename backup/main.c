@@ -31,8 +31,6 @@
 
 #include "../utilities/utilities.h"
 
-#define DATE_LEN 20
-
 // this will wait for all child processes and shutdown
 void sigusr1_handler(int signo){
     int status;    
@@ -88,9 +86,50 @@ time_t backupDateToTimeStruct(char * backupDate){
     return mktime(&date);
 }
 
-
-void fullBackup(char* monitoredPath, char* backupPath){
+// returns the created/latest backup folder path
+// for example: "backupPath/2013_04_13_14_56_19"
+char* fullBackup(const char* monitoredPath, const char* backupPath){
+    DIR * monitoredDir = opendir(monitoredPath);
     
+    struct dirent *direntp;
+    struct stat stat_buf;
+    
+    chdir(backupPath);
+    char* restorePoint = timeStructToBackupDate(time(NULL));
+    mkdir(restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    chdir(restorePoint);
+    int bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    // return from the backup folder
+    chdir(".."); chdir(".."); 
+    
+    char fromPath[MAX_LEN];
+    char toPath[MAX_LEN];
+    char fileInfo[MAX_LEN];
+    chdir(monitoredPath);
+    while ( (direntp = readdir(monitoredDir)) != NULL ) {
+        if ( stat(direntp->d_name, &stat_buf) != 0 ) {
+            printf( "Error number %d: %s\n", errno, strerror(errno) );
+            exit(1);
+        }
+        if ( S_ISREG(stat_buf.st_mode)
+                // ignore ".hidden" files
+                && strncmp(direntp->d_name, ".", 1)
+                && strcmp(direntp->d_name, BACKUPINFO) ) {
+            printf( "Backed up %-25s\n", direntp->d_name );
+            chdir("..");
+            sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
+            sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
+            copyFile(fromPath, toPath);
+            sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
+            write(bckpinfo, fileInfo, strlen(fileInfo));
+            chdir(monitoredPath);
+        }
+    }
+
+    char * latestRestorePoint = malloc( MAX_LEN * sizeof(char) );
+    sprintf(latestRestorePoint, "%s/%s", backupPath, restorePoint );
+    free(restorePoint);
+    return latestRestorePoint;
 }
 
 int main(int argc, const char * argv[])
@@ -102,17 +141,19 @@ int main(int argc, const char * argv[])
         exit(1);
     }
 
+    const char * monitoredPath = argv[1];
+    const char * backupPath = argv[2];
     DIR *monitoredDir;
     DIR *backupDir;
     int updateInterval;
     bool backgrounded;
     
-    if ( (monitoredDir = opendir(argv[1])) == NULL ) {
+    if ( (monitoredDir = opendir(monitoredPath)) == NULL ) {
         perror(argv[1]);
         exit(2);
     }
     
-    if ( (backupDir = opendir(argv[2])) == NULL ) {
+    if ( (backupDir = opendir(backupPath)) == NULL ) {
         // if backup dir doesnt exist, create it
         mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         if ( (backupDir = opendir(argv[2])) == NULL ) {
@@ -157,13 +198,18 @@ int main(int argc, const char * argv[])
     
     // do them backups loop here
     //int counter =20; while( (counter = sleep(counter) )!=0 );
+    char * latestRestorePoint;
+    latestRestorePoint = fullBackup(monitoredPath, backupPath);
+    printf("Latest restore point: %s\n", latestRestorePoint);
     
+    /*
     // time tests
     char date[DATE_LEN];
     time_t timer;
     time(&timer);
     sprintf(date, "%s", timeStructToBackupDate(timer) );
     printf("%ld - %s \n%ld \n", timer, date, backupDateToTimeStruct(date) );
+     */
     
     return 0;
 }
