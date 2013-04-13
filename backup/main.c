@@ -27,9 +27,11 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <time.h>
 
-// this will wait for all child processes
-// still running and shutdown
+#define DATE_LEN 20
+
+// this will wait for all child processes and shutdown
 void sigusr1_handler(int signo){
     int status;    
     printf("Waiting for child processes to end\n");
@@ -40,7 +42,6 @@ void sigusr1_handler(int signo){
     exit(0);
 }
 
-
 // this will remove any zombie processes
 void sigchld_handler(int signo){
     int status;
@@ -48,6 +49,46 @@ void sigchld_handler(int signo){
     
     while ( (pid=waitpid(-1, &status, WNOHANG)) > 0 )
         printf("PARENT: child with PID=%d terminated with exit code %d\n", pid, WEXITSTATUS(status));
+}
+
+char* timeStructToBackupDate(time_t time){
+    struct tm * date;
+    date = localtime(&time);
+    char* dateStr = malloc(DATE_LEN * sizeof(char));
+    
+    //year_month_day_hours_minutes_seconds
+    sprintf(dateStr, "%04d_%02d_%02d_%02d_%02d_%02d",
+           date->tm_year+1900,
+           date->tm_mon+1,
+           date->tm_mday,
+           date->tm_hour,
+           date->tm_min,
+           date->tm_sec);
+    
+    return dateStr;
+}
+
+time_t backupDateToTimeStruct(char * backupdate){
+    struct tm date;
+    int year, mon;
+    sscanf(backupdate, "%04d_%02d_%02d_%02d_%02d_%02d",
+           &year,
+           &mon,
+           &date.tm_mday,
+           &date.tm_hour,
+           &date.tm_min,
+           &date.tm_sec);
+    year -= 1900;
+    mon -= 1;
+    date.tm_year = year;
+    date.tm_mon = mon;
+    
+    return mktime(&date);
+}
+
+
+void fullBackup(char* monitoredPath, char* backupPath){
+    
 }
 
 int main(int argc, const char * argv[])
@@ -112,23 +153,15 @@ int main(int argc, const char * argv[])
         exit(7);
     }
     
-    pid_t father = getpid();
-    
-    pid_t pid;
-    int i, n;
-    for (i=1; i<=10; i++) {
-        pid=fork();
-        if (pid == 0){
-            printf("CHILD no. %d (PID=%d) working ... \n",i,getpid());
-            sleep(i); // child working ...
-            printf("CHILD no. %d (PID=%d) exiting ... \n",i,getpid());
-            kill(father, SIGUSR1);
-            exit(0);
-        }
-    }
-    
-    n=20; while((n=sleep(n))!=0);
     // do them backups loop here
+    //int counter =20; while( (counter = sleep(counter) )!=0 );
+    
+    // time tests
+    char date[DATE_LEN];
+    time_t timer;
+    time(&timer);
+    sprintf(date, "%s", timeStructToBackupDate(timer) );
+    printf("%ld - %s \n%ld \n", timer, date, backupDateToTimeStruct(date) );
     
     return 0;
 }

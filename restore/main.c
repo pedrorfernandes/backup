@@ -25,7 +25,7 @@
 #include <fcntl.h>
 
 #define PROMPT "> "
-#define DATE_LEN 19
+#define DATE_LEN 20
 #define MAX_LEN 1024
 #define BACKUP_INFO_LEN 33
 #define BACKUPINFO "__bckpinfo__"
