@@ -24,6 +24,31 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+
+// this will wait for all child processes
+// still running and shutdown
+void sigusr1_handler(int signo){
+    int status;    
+    printf("Waiting for child processes to end\n");
+    while ( waitpid(-1, &status, 0) )
+        if (errno == ECHILD)
+            break;
+    printf("All child processes terminated, exiting...\n");
+    exit(0);
+}
+
+
+// this will remove any zombie processes
+void sigchld_handler(int signo){
+    int status;
+    pid_t pid;
+    
+    while ( (pid=waitpid(-1, &status, WNOHANG)) > 0 )
+        printf("PARENT: child with PID=%d terminated with exit code %d\n", pid, WEXITSTATUS(status));
+}
 
 int main(int argc, const char * argv[])
 {
@@ -64,8 +89,45 @@ int main(int argc, const char * argv[])
         backgrounded = true;
     } else
         backgrounded = false;
+    
+    // install sigchild handler
+    struct sigaction action;
+    action.sa_handler = sigchld_handler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    if (sigaction(SIGCHLD, &action, NULL) < 0)
+    {
+        fprintf(stderr,"Unable to install SIGCHLD handler\n");
+        exit(6);
+    }
 
     // install sigusr1 handler
+    struct sigaction action2;
+    action2.sa_handler = sigusr1_handler;
+    sigemptyset(&action2.sa_mask);
+    action2.sa_flags = 0;
+    if (sigaction(SIGUSR1, &action2, NULL) < 0)
+    {
+        fprintf(stderr,"Unable to install SIGUSR1 handler\n");
+        exit(7);
+    }
+    
+    pid_t father = getpid();
+    
+    pid_t pid;
+    int i, n;
+    for (i=1; i<=10; i++) {
+        pid=fork();
+        if (pid == 0){
+            printf("CHILD no. %d (PID=%d) working ... \n",i,getpid());
+            sleep(i); // child working ...
+            printf("CHILD no. %d (PID=%d) exiting ... \n",i,getpid());
+            kill(father, SIGUSR1);
+            exit(0);
+        }
+    }
+    
+    n=20; while((n=sleep(n))!=0);
     // do them backups loop here
     
     return 0;
