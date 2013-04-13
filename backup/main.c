@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <time.h>
+#include <wait.h>
 
 #include "../utilities/utilities.h"
 

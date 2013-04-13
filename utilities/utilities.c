@@ -146,34 +146,36 @@ int copyFile ( const char* fromPath, const char* toPath ) {
 
 char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
     
-    if(strlen(bckpInfoLine) < DATE_LEN) {
+    if(strlen(bckpInfoLine) < DATE_LEN - 1) {
         return NULL;
     }
     
     char* backupPath = malloc( DATE_LEN * sizeof(char) );
     
-    memcpy(backupPath, bckpInfoLine, DATE_LEN);
+    memcpy(backupPath, bckpInfoLine, DATE_LEN-1);
+    backupPath[DATE_LEN - 1] = '\0';
     
     return backupPath;
 }
 
 char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
     
-    if(strlen(bckpInfoLine) <= DATE_LEN) {
+    if(strlen(bckpInfoLine) <= DATE_LEN - 1) {
         fprintf(stderr, "Invalid filename\n");
         return NULL;
     }
     
-    unsigned long fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 1);
+    unsigned long fileNameSize = strlen(bckpInfoLine) - (DATE_LEN - 2); //-2 to account for /0
     
     char* fileName = malloc( fileNameSize * sizeof(char) );
     
-    int i = DATE_LEN + 1;
+    int i = DATE_LEN;
     int j = 0;
     
     for( ; j < fileNameSize && bckpInfoLine[i] != '\n'; i++, j++) {
         fileName[j] = bckpInfoLine[i];
     }
+    fileName[DATE_LEN - 1] = '\0';
     
     return fileName;
 }
