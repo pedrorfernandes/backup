@@ -175,7 +175,8 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
     for( ; j < fileNameSize && bckpInfoLine[i] != '\n'; i++, j++) {
         fileName[j] = bckpInfoLine[i];
     }
-    fileName[DATE_LEN - 1] = '\0';
+    
+    fileName[fileNameSize - 1] = '\0';
     
     return fileName;
 }
