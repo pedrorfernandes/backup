@@ -54,5 +54,9 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine);
 
 char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName);
 
+int fileExists(const char * filePath);
+
+int filesDeleted(const char* dirPath, const char* bckpInfoPath);
+
 
 #endif

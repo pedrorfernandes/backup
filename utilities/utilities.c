@@ -196,3 +196,34 @@ char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName) 
     return NULL;
     
 }
+
+int fileExists(const char * filePath) {
+
+    int file;
+    file = open(filePath, O_RDONLY);
+
+    if (file == -1)
+        return 1;
+    else
+        return 0;
+    
+}
+
+int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
+    
+    char filePath[MAX_LEN];
+    
+    int i = 1;
+    for(; i <= getNumOfLines(bckpInfoPath); i++) {
+        char* fileLine = getLineAt(i, bckpInfoPath);
+        char* fileFromBckpInfo = extractFileNameFromInfoLine(fileLine);
+        
+        sprintf(filePath, "%s/%s", dirPath, fileFromBckpInfo);
+        
+        if(fileExists(filePath) == 1)
+            return 0;
+    }
+    
+    return 1;
+    
+}
