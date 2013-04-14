@@ -134,6 +134,17 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
             chdir(monitoredPath);
         }
     }
+    
+    if(close(bckpinfo) != 0) {
+        printf("Problem closing backup info. Error number %d: %s\n", errno, strerror(errno));
+        exit(1);
+    }
+    
+    if(closedir(monitoredDir) != 0) {
+        printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
+        exit(1);
+    }
+        
     // return from monitoredPath
     chdir(path);
     char * latestRestorePoint = malloc(MAX_LEN * sizeof (char));
@@ -241,6 +252,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                         sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
                         write(bckpinfo, fileInfo, strlen(fileInfo));
                     }
+                    free(fileLine);
                     chdir(monitoredPath);
                 } else {
                     chdir(path);
@@ -252,6 +264,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                         restorePointCreated = true;
                         rewinddir(monitoredDir);
                     }
+                    free(fileLine);
                     chdir(monitoredPath);
                 }
             }
@@ -264,6 +277,12 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
         *lastUpdateTime = thisUpdateTime;
         close(bckpinfo);
     }
+    
+    if(closedir(monitoredDir) != 0) {
+        printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
+        exit(1);
+    }
+    
     free(previousBckpInfo);
     free(restorePoint);
 }
