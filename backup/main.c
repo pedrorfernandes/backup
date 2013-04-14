@@ -142,6 +142,19 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
     return latestRestorePoint;
 }
 
+int createRestorePoint(const char* backupPath, time_t * updateTime, char ** restorePoint, char* latestRestorePoint){
+    chdir(backupPath);
+    time(updateTime);
+    *restorePoint = timeStructToBackupDate(*updateTime);
+    sprintf(latestRestorePoint, "%s/%s", backupPath, *restorePoint);
+    mkdir(*restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    chdir(*restorePoint);
+    int bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    // return from the backup folder
+    chdir(path);
+    return bckpinfo;
+}
+
 // returns the created/latest backup folder path
 // for example: "backupPath/2013_04_13_14_56_19"
 
@@ -155,7 +168,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     char toPath[MAX_LEN];
     char fileInfo[MAX_LEN];
     
-    char* restorePoint = malloc(DATE_LEN * sizeof (char));
+    char* restorePoint = NULL;  //= malloc(DATE_LEN * sizeof (char));
     char* previousBckpInfo = getBackupInfo(latestRestorePoint);
     int bckpinfo;
     time_t thisUpdateTime;
@@ -167,20 +180,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     //printf("%s\n", cwd);
     
     if (filesDeleted(monitoredPath, previousBckpInfo) == 0) {
-        chdir(backupPath);
-        //*lastUpdateTime = time(NULL);
-        time(&thisUpdateTime);
-        // restorePoint = timeStructToBackupDate(*lastUpdateTime);
-        restorePoint = timeStructToBackupDate(thisUpdateTime);
-        sprintf(latestRestorePoint, "%s/%s", backupPath, restorePoint);
-        mkdir(restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        chdir(restorePoint);
-        bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
-        // return from the backup folder
-        //chdir("..");
-        //chdir("..");
-        chdir(path);
-        
+        bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
         restorePointCreated = true;
     }
     
@@ -207,33 +207,16 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                                  || (difftime(chgTime, *lastUpdateTime) > 0) );
             
             if ( fileModified && !restorePointCreated) {
-                
-                //chdir("..");
                 chdir(path);
-                chdir(backupPath);
-                //*lastUpdateTime = time(NULL);
-                thisUpdateTime = time(NULL);
-                // restorePoint = timeStructToBackupDate(*lastUpdateTime);
-                restorePoint = timeStructToBackupDate(thisUpdateTime);
-                sprintf(latestRestorePoint, "%s/%s", backupPath, restorePoint);
-                mkdir(restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                chdir(restorePoint);
-                bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
-                // return from the backup folder
-                //chdir("..");
-                //chdir("..");
-                chdir(path);
+                bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
                 chdir(monitoredPath);
-                
                 restorePointCreated = true;
                 // if the restore point was created, we must check all files again
                 // to update de bckpinfo
                 rewinddir(monitoredDir);
             } else if ( fileModified && restorePointCreated) {
-                
-                printf("Backed up %-25s\n", direntp->d_name);
-                //chdir("..");
                 chdir(path);
+                printf("Backed up %-25s\n", direntp->d_name);
                 sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                 sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                 copyFile(fromPath, toPath);
@@ -243,13 +226,32 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                 
             } else {
                 if (restorePointCreated) {
-                    //chdir("..");
                     chdir(path);
                     char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
-                    sprintf(fileInfo, "%s\n", fileLine);
-                    printf("Writing to bckpinfo: %s\n", fileLine);
-                    if(fileInfo != NULL)
+                    if(fileLine != NULL){
+                        sprintf(fileInfo, "%s\n", fileLine);
+                        printf("Writing to bckpinfo: %s\n", fileLine);
                         write(bckpinfo, fileInfo, strlen(fileInfo));
+                    } else {
+                        // a file that is not in the latest bckpinfo must be backed up again
+                        printf("Backed up %-25s\n", direntp->d_name);
+                        sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
+                        sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
+                        copyFile(fromPath, toPath);
+                        sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
+                        write(bckpinfo, fileInfo, strlen(fileInfo));
+                    }
+                    chdir(monitoredPath);
+                } else {
+                    chdir(path);
+                    char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
+                    if (fileLine == NULL) {
+                        // some file that is not in the latest bckpinfo showed up!
+                        bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
+                        chdir(monitoredPath);
+                        restorePointCreated = true;
+                        rewinddir(monitoredDir);
+                    }
                     chdir(monitoredPath);
                 }
             }
