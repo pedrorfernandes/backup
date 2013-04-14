@@ -35,7 +35,6 @@
 char * path;
 
 // this will wait for all child processes and shutdown
-
 void sigusr1_handler(int signo) {
     int status;
     printf("Waiting for child processes to end\n");
@@ -47,13 +46,11 @@ void sigusr1_handler(int signo) {
 }
 
 // this will remove any zombie processes
-
 void sigchld_handler(int signo) {
     int status;
     pid_t pid;
     
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
-    //printf("PARENT: child with PID=%d terminated with exit code %d\n", pid, WEXITSTATUS(status));
 }
 
 char* timeStructToBackupDate(time_t time) {
@@ -93,7 +90,6 @@ time_t backupDateToTimeStruct(char * backupDate) {
 
 // returns the created/latest backup folder path
 // for example: "backupPath/2013_04_13_14_56_19"
-
 char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* backupDate) {
     DIR * monitoredDir = opendir(monitoredPath);
     
@@ -107,8 +103,6 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
     chdir(restorePoint);
     int bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
     // return from the backup folder
-    //chdir("..");
-    //chdir("..");
     chdir(path);
     
     char fromPath[MAX_LEN];
@@ -168,7 +162,6 @@ int createRestorePoint(const char* backupPath, time_t * updateTime, char ** rest
 
 // returns the created/latest backup folder path
 // for example: "backupPath/2013_04_13_14_56_19"
-
 void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char* latestRestorePoint, time_t* lastUpdateTime) {
     DIR * monitoredDir = opendir(monitoredPath);
     
@@ -350,7 +343,6 @@ int main(int argc, const char * argv[], char* envp[]) {
     }
     
     // do them backups loop here
-    //int counter =20; while( (counter = sleep(counter) )!=0 );
     char * latestRestorePoint;
     time_t latestRestoreDate;
     time(&latestRestoreDate);
@@ -367,15 +359,6 @@ int main(int argc, const char * argv[], char* envp[]) {
         backupModifiedFiles(monitoredPath, backupPath, latestRestorePoint, &latestRestoreDate);
         printf("Latest restore point: %s\n", latestRestorePoint);
     }
-    
-    /*
-     // time tests
-     char date[DATE_LEN];
-     time_t timer;
-     time(&timer);
-     sprintf(date, "%s", timeStructToBackupDate(timer) );
-     printf("%ld - %s \n%ld \n", timer, date, backupDateToTimeStruct(date) );
-     */
     
     return 0;
 }
