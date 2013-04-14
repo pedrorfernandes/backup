@@ -43,7 +43,6 @@ char** getAndPrintFolders ( DIR * backupDir ) {
     int numberOfBackups = getNumOfDirectories ( backupDir );
     
     char** backups = createStrArray(numberOfBackups, DATE_LEN);
-    size_t backups_size = sizeof(backups) / sizeof(char*);
 
     int n = 0;
 
@@ -63,7 +62,7 @@ char** getAndPrintFolders ( DIR * backupDir ) {
     }
 
     rewinddir ( backupDir );
-    qsort(backups, backups_size, sizeof(char *), cmpBackupDates);
+    qsort(backups, numberOfBackups, sizeof(char *), cmpBackupDates);
     
     printAvailableBackups(backups, numberOfBackups);
     return backups;
