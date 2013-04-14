@@ -164,10 +164,9 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     //printf("%s\n", cwd);
 
     if (filesDeleted(monitoredPath, previousBckpInfo) == 0) {
-        chdir("..");
         chdir(backupPath);
         //*lastUpdateTime = time(NULL);
-        thisUpdateTime = time(NULL);
+        time(&thisUpdateTime);
         // restorePoint = timeStructToBackupDate(*lastUpdateTime);
         restorePoint = timeStructToBackupDate(thisUpdateTime);
         sprintf(latestRestorePoint, "%s/%s", backupPath, restorePoint);
@@ -177,7 +176,6 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
         // return from the backup folder
         chdir("..");
         chdir("..");
-        chdir(monitoredPath);
 
         restorePointCreated = true;
     }
@@ -201,10 +199,10 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
             time_t modTime = stat_buf.st_mtimespec.tv_sec;
             time_t chgTime = stat_buf.st_ctimespec.tv_sec;
 #endif            
+            bool fileModified = ( (difftime(modTime, *lastUpdateTime) > 0)
+                               || (difftime(chgTime, *lastUpdateTime) > 0) );
 
-            if ((difftime(modTime, *lastUpdateTime) > 0) || (difftime(chgTime, *lastUpdateTime) > 0)) {
-
-                if (!restorePointCreated) {
+            if ( fileModified && !restorePointCreated) {
 
                     chdir("..");
                     chdir(backupPath);
@@ -222,8 +220,10 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                     chdir(monitoredPath);
 
                     restorePointCreated = true;
-
-                }
+                    // if the restore point was created, we must check all files again
+                    // to update de bckpinfo
+                    rewinddir(monitoredDir);
+            } else if ( fileModified && restorePointCreated) {
 
                 printf("Backed up %-25s\n", direntp->d_name);
                 chdir("..");
@@ -233,6 +233,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                 sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
                 write(bckpinfo, fileInfo, strlen(fileInfo));
                 chdir(monitoredPath);
+                
             } else {
                 if (restorePointCreated) {
                     chdir("..");
