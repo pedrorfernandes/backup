@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 
 #define PROMPT "> "
 #define DATE_LEN 20
@@ -27,6 +28,12 @@
 #define BACKUPINFO "__bckpinfo__"
 
 // TODO documentation
+
+char* timeStructToBackupDate(time_t time);
+
+time_t backupDateToTimeStruct(const char * backupDate);
+
+time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsigned int numberOfBackups);
 
 char** createStrArray(unsigned int numberOfStrings, unsigned int sizeOfStrings);
 
@@ -58,5 +65,6 @@ int fileExists(const char * filePath);
 
 int filesDeleted(const char* dirPath, const char* bckpInfoPath);
 
+int cmpBackupDates(const void *date1, const void *date2);
 
 #endif

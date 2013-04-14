@@ -242,3 +242,69 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
     return 1;
     
 }
+
+time_t backupDateToTimeStruct(const char * backupDate) {
+    struct tm date;
+    int year, mon;
+    sscanf(backupDate, "%04d_%02d_%02d_%02d_%02d_%02d",
+           &year,
+           &mon,
+           &date.tm_mday,
+           &date.tm_hour,
+           &date.tm_min,
+           &date.tm_sec);
+    year -= 1900;
+    mon -= 1;
+    date.tm_year = year;
+    date.tm_mon = mon;
+    
+    return mktime(&date);
+}
+
+char* timeStructToBackupDate(time_t time) {
+    struct tm * date;
+    date = localtime(&time);
+    char* dateStr = malloc(DATE_LEN * sizeof (char));
+    
+    //year_month_day_hours_minutes_seconds
+    sprintf(dateStr, "%04d_%02d_%02d_%02d_%02d_%02d",
+            date->tm_year + 1900,
+            date->tm_mon + 1,
+            date->tm_mday,
+            date->tm_hour,
+            date->tm_min,
+            date->tm_sec);
+    
+    return dateStr;
+}
+
+time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsigned int numberOfBackups) {
+    
+    unsigned int i = 0;
+    for(; i < numberOfBackups; i++) {
+        backupTimeArray[i] = backupDateToTimeStruct(backupArray[i]);
+    }
+    
+    return backupTimeArray;
+    
+}
+
+int cmpBackupDates(const void *date1, const void *date2) {
+    printf("Oh hi there\n");
+
+    const char **date1string = (const char **)date1;
+    const char **date2string = (const char **)date2;
+    
+    const time_t date1time = backupDateToTimeStruct(*date1string);
+    const time_t date2time = backupDateToTimeStruct(*date2string);
+    
+    double diff = difftime(date1time, date2time);
+    printf("Diff: %f\n", diff);
+    
+    if(diff > 0)
+        return 1;
+    else if(diff < 0)
+        return -1;
+    else
+        return 0;
+}

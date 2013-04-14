@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <time.h>
 #include <sys/wait.h>
 
 #include "../utilities/utilities.h"
@@ -51,41 +50,6 @@ void sigchld_handler(int signo) {
     pid_t pid;
     
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
-}
-
-char* timeStructToBackupDate(time_t time) {
-    struct tm * date;
-    date = localtime(&time);
-    char* dateStr = malloc(DATE_LEN * sizeof (char));
-    
-    //year_month_day_hours_minutes_seconds
-    sprintf(dateStr, "%04d_%02d_%02d_%02d_%02d_%02d",
-            date->tm_year + 1900,
-            date->tm_mon + 1,
-            date->tm_mday,
-            date->tm_hour,
-            date->tm_min,
-            date->tm_sec);
-    
-    return dateStr;
-}
-
-time_t backupDateToTimeStruct(char * backupDate) {
-    struct tm date;
-    int year, mon;
-    sscanf(backupDate, "%04d_%02d_%02d_%02d_%02d_%02d",
-           &year,
-           &mon,
-           &date.tm_mday,
-           &date.tm_hour,
-           &date.tm_min,
-           &date.tm_sec);
-    year -= 1900;
-    mon -= 1;
-    date.tm_year = year;
-    date.tm_mon = mon;
-    
-    return mktime(&date);
 }
 
 // returns the created/latest backup folder path

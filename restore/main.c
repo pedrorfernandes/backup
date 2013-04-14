@@ -26,8 +26,15 @@
 
 #include "../utilities/utilities.h"
 
-char** getAndPrintFolders ( DIR * backupDir )
-{
+void printAvailableBackups(char **backupsArray, size_t numberOfBackups) 
+{ 
+    int i = 0;
+ 
+    for(; i<numberOfBackups; i++) 
+        printf("%d - %s\n", i+1, backupsArray[i]);
+} 
+
+char** getAndPrintFolders ( DIR * backupDir ) {
     //TODO Order folders?
   
     struct dirent *direntp;
@@ -36,6 +43,7 @@ char** getAndPrintFolders ( DIR * backupDir )
     int numberOfBackups = getNumOfDirectories ( backupDir );
     
     char** backups = createStrArray(numberOfBackups, DATE_LEN);
+    size_t backups_size = sizeof(backups) / sizeof(char*);
 
     int n = 0;
 
@@ -49,12 +57,15 @@ char** getAndPrintFolders ( DIR * backupDir )
                 && strcmp ( direntp->d_name, "." )
                 && strcmp ( direntp->d_name, ".." ) ) {
             sprintf (backups[n], "%s", direntp->d_name );
-            printf ( "%d- %-25s\n", n, direntp->d_name );
+           // printf ( "%d- %-25s\n", n, direntp->d_name );
             n++;
         }
     }
 
     rewinddir ( backupDir );
+    qsort(backups, backups_size, sizeof(char *), cmpBackupDates);
+    
+    printAvailableBackups(backups, numberOfBackups);
     return backups;
 }
 
