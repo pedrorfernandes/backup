@@ -56,6 +56,11 @@ int getNumOfLines ( const char * filePath )
         }
     }
     
+    if(close(file) != 0) {
+        printf("Problem closing file. Error number %d: %s\n", errno, strerror(errno));
+        exit(1);
+    }
+    
     return number_of_lines;
 }
 
@@ -209,8 +214,10 @@ int fileExists(const char * filePath) {
 
     if (file == -1)
         return 1;
-    else
+    else {
+        close(file);
         return 0;
+    }
     
 }
 
