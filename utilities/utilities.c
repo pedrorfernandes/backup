@@ -179,3 +179,20 @@ char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
     
     return fileName;
 }
+
+char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName) {
+    
+    int i = 1;
+    for(; i <= getNumOfLines(bckpInfoPath); i++) {
+        char* fileLine = getLineAt(i, bckpInfoPath);
+        
+        char* fileFromBckpInfo = extractFileNameFromInfoLine(fileLine);
+        
+        if(strcmp(fileName, fileFromBckpInfo) == 0)
+            return fileLine;
+        
+    }
+    
+    return NULL;
+    
+}

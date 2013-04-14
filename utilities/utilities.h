@@ -52,5 +52,7 @@ char* extractBackupPathFromInfoLine(const char* bckpInfoLine);
 
 char* extractFileNameFromInfoLine(const char* bckpInfoLine);
 
+char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName);
+
 
 #endif
