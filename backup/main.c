@@ -258,9 +258,12 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
         }
     }
     
+
     chdir(path);
-    if (restorePointCreated)
+    if (restorePointCreated){
         *lastUpdateTime = thisUpdateTime;
+        close(bckpinfo);
+    }
     free(previousBckpInfo);
     free(restorePoint);
 }
