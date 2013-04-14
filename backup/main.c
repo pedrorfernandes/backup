@@ -261,7 +261,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     chdir(path);
     if (restorePointCreated)
         *lastUpdateTime = thisUpdateTime;
-    
+    free(previousBckpInfo);
     free(restorePoint);
 }
 

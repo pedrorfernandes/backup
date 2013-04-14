@@ -187,10 +187,11 @@ char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName) 
         char* fileLine = getLineAt(i, bckpInfoPath);
         
         char* fileFromBckpInfo = extractFileNameFromInfoLine(fileLine);
-        
-        if(strcmp(fileName, fileFromBckpInfo) == 0)
+        if(strcmp(fileName, fileFromBckpInfo) == 0){
+            free(fileFromBckpInfo);
             return fileLine;
-        
+        }
+        free(fileFromBckpInfo);
     }
     
     return NULL;
@@ -220,8 +221,11 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
         
         sprintf(filePath, "%s/%s", dirPath, fileFromBckpInfo);
         
-        if(fileExists(filePath) == 1)
+        free(fileLine);
+        free(fileFromBckpInfo);
+        if(fileExists(filePath) == 1){
             return 0;
+        }
     }
     
     return 1;
