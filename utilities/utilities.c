@@ -290,7 +290,6 @@ time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsig
 }
 
 int cmpBackupDates(const void *date1, const void *date2) {
-    printf("Oh hi there\n");
 
     const char **date1string = (const char **)date1;
     const char **date2string = (const char **)date2;
@@ -299,11 +298,10 @@ int cmpBackupDates(const void *date1, const void *date2) {
     const time_t date2time = backupDateToTimeStruct(*date2string);
     
     double diff = difftime(date1time, date2time);
-    printf("Diff: %f\n", diff);
     
-    if(diff > 0)
+    if(diff < 0)
         return 1;
-    else if(diff < 0)
+    else if(diff > 0)
         return -1;
     else
         return 0;
