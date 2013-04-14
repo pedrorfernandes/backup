@@ -107,6 +107,8 @@ char* getLineAt ( unsigned int line, const char * filePath )
         fgets (str, MAX_LEN, file);
     }
     
+    fclose(file);
+    
     parsePath(str);
     return str;
 }
@@ -193,6 +195,7 @@ char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName) 
             return fileLine;
         }
         free(fileFromBckpInfo);
+        free(fileLine);
     }
     
     return NULL;
