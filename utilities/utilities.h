@@ -37,6 +37,8 @@ time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsig
 
 char** createStrArray(unsigned int numberOfStrings, unsigned int sizeOfStrings);
 
+void freeStrArray(char** strArray, unsigned int numberOfStrings);
+
 void parsePath(char* path);
 
 unsigned int convertToUnsignedInt(char c);
@@ -66,5 +68,7 @@ int fileExists(const char * filePath);
 int filesDeleted(const char* dirPath, const char* bckpInfoPath);
 
 int cmpBackupDates(const void *date1, const void *date2);
+
+int getChoice(const char *prompt, int maxChoice);
 
 #endif

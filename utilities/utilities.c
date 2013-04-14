@@ -24,6 +24,17 @@ char** createStrArray(unsigned int numberOfStrings, unsigned int sizeOfStrings) 
     
 }
 
+void freeStrArray(char** strArray, unsigned int numberOfStrings) {
+    
+    int i;
+    
+    for ( i = 0 ; i < numberOfStrings; ++i ) {
+        free(strArray[i]);
+    }
+    
+    free(strArray);
+}
+
 void parsePath(char* path) {
     
     if(path == NULL)
@@ -47,8 +58,9 @@ int getNumOfLines ( const char * filePath )
         perror ( filePath );
         exit ( 5 );
     }
+    
     unsigned char ch[1];
-    int number_of_lines = 1;
+    int number_of_lines = 0;
     
     while ( read ( file, ch, 1 ) > 0 ) {
         if ( ch[0] == '\n' ) {
@@ -142,7 +154,7 @@ int copyFile ( const char* fromPath, const char* toPath ) {
     pid = fork();
     
     if ( pid == 0 ) {
-        execlp ( "cp", "cp", fromPath, toPath, NULL);
+        execlp ( "cp", "cp", "-f", fromPath, toPath, NULL);
         printf ( "Copy failed! \n" );
         return ( 1 );
     }
@@ -278,17 +290,6 @@ char* timeStructToBackupDate(time_t time) {
     return dateStr;
 }
 
-time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsigned int numberOfBackups) {
-    
-    unsigned int i = 0;
-    for(; i < numberOfBackups; i++) {
-        backupTimeArray[i] = backupDateToTimeStruct(backupArray[i]);
-    }
-    
-    return backupTimeArray;
-    
-}
-
 int cmpBackupDates(const void *date1, const void *date2) {
 
     const char **date1string = (const char **)date1;
@@ -305,4 +306,23 @@ int cmpBackupDates(const void *date1, const void *date2) {
         return -1;
     else
         return 0;
+}
+
+int getChoice(const char *prompt, int maxChoice) {
+    int choice;
+    char input[MAX_LEN];
+    
+    while (fputs(prompt, stdout) != EOF && fgets(input, sizeof(input), stdin) != 0)
+    {
+        if (sscanf(input, "%d", &choice) == 1)
+            if(choice >= 0 && choice <= maxChoice)
+                return choice;
+            else
+                printf("Please select an available option\n");
+        
+        printf("That's not a valid input!\n");
+    }
+
+    printf("EOF problem or error!\n");
+    exit(1);
 }
