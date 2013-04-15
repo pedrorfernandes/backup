@@ -314,15 +314,28 @@ int getChoice(const char *prompt, int maxChoice) {
     
     while (fputs(prompt, stdout) != EOF && fgets(input, sizeof(input), stdin) != 0)
     {
-        if (sscanf(input, "%d", &choice) == 1)
-            if(choice >= 0 && choice <= maxChoice)
+        if (sscanf(input, "%d", &choice) == 1){
+            if(choice >= 0 && choice <= maxChoice){
                 return choice;
-            else
+            } else {
                 printf("Please select an available option\n");
-        
+            }
+        }
         printf("That's not a valid input!\n");
     }
 
     printf("EOF problem or error!\n");
     exit(1);
 }
+
+int backgroundProcess(){
+    pid_t pid;
+    pid = fork();
+    
+    if ( pid == 0 ) {
+        return 0;
+    } else {
+        exit(0);
+    }
+}
+

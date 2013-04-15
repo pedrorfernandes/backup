@@ -71,4 +71,6 @@ int cmpBackupDates(const void *date1, const void *date2);
 
 int getChoice(const char *prompt, int maxChoice);
 
+int backgroundProcess();
+
 #endif

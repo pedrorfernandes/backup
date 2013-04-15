@@ -32,15 +32,16 @@
 #include "../utilities/utilities.h"
 
 char * path;
+bool backgrounded = false;
 
 // this will wait for all child processes and shutdown
 void sigusr1_handler(int signo) {
     int status;
-    printf("Waiting for child processes to end\n");
+    if (!backgrounded) printf("Waiting for child processes to end\n");
     while (waitpid(-1, &status, 0))
         if (errno == ECHILD)
             break;
-    printf("All child processes terminated, exiting...\n");
+    if (!backgrounded) printf("All child processes terminated, exiting...\n");
     exit(0);
 }
 
@@ -75,14 +76,14 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
     chdir(monitoredPath);
     while ((direntp = readdir(monitoredDir)) != NULL) {
         if (stat(direntp->d_name, &stat_buf) != 0) {
-            printf("Error number %d, %s: %s\n", errno, direntp->d_name, strerror(errno));
+            if (!backgrounded) printf("Error number %d, %s: %s\n", errno, direntp->d_name, strerror(errno));
             exit(1);
         }
         if (S_ISREG(stat_buf.st_mode)
             // ignore ".hidden" files
             && strncmp(direntp->d_name, ".", 1)
             && strcmp(direntp->d_name, BACKUPINFO)) {
-            printf("Backed up %-25s\n", direntp->d_name);
+            if (!backgrounded) printf("Backed up %-25s\n", direntp->d_name);
             chdir(path);
             sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
             sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
@@ -94,12 +95,12 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
     }
     
     if(close(bckpinfo) != 0) {
-        printf("Problem closing backup info. Error number %d: %s\n", errno, strerror(errno));
+        if (!backgrounded) printf("Problem closing backup info. Error number %d: %s\n", errno, strerror(errno));
         exit(1);
     }
     
     if(closedir(monitoredDir) != 0) {
-        printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
+        if (!backgrounded) printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
         exit(1);
     }
         
@@ -145,7 +146,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     
     //char cwd[MAX_LEN];
     //getcwd(cwd, sizeof (cwd));
-    //printf("%s\n", cwd);
+    //if (!backgrounded) printf("%s\n", cwd);
     
     if (filesDeleted(monitoredPath, previousBckpInfo) == 0) {
         bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
@@ -155,7 +156,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     chdir(monitoredPath);
     while ((direntp = readdir(monitoredDir)) != NULL) {
         if (stat(direntp->d_name, &stat_buf) != 0) {
-            printf("Error number %d: %s\n", errno, strerror(errno));
+            if (!backgrounded) printf("Error number %d: %s\n", errno, strerror(errno));
             exit(1);
         }
         if (S_ISREG(stat_buf.st_mode)
@@ -184,7 +185,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                 rewinddir(monitoredDir);
             } else if ( fileModified && restorePointCreated) {
                 chdir(path);
-                printf("Backed up %-25s\n", direntp->d_name);
+                if (!backgrounded) printf("Backed up %-25s\n", direntp->d_name);
                 sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                 sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                 copyFile(fromPath, toPath);
@@ -198,11 +199,11 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                     char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
                     if(fileLine != NULL){
                         sprintf(fileInfo, "%s\n", fileLine);
-                        printf("Writing to bckpinfo: %s\n", fileLine);
+                        if (!backgrounded) printf("Writing to bckpinfo: %s\n", fileLine);
                         write(bckpinfo, fileInfo, strlen(fileInfo));
                     } else {
                         // a file that is not in the latest bckpinfo must be backed up again
-                        printf("Backed up %-25s\n", direntp->d_name);
+                        if (!backgrounded) printf("Backed up %-25s\n", direntp->d_name);
                         sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                         sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                         copyFile(fromPath, toPath);
@@ -236,7 +237,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     }
     
     if(closedir(monitoredDir) != 0) {
-        printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
+        if (!backgrounded) printf("Problem closing monitored directory. Error number %d: %s\n", errno, strerror(errno));
         exit(1);
     }
     
@@ -258,7 +259,6 @@ int main(int argc, const char * argv[], char* envp[]) {
     DIR *monitoredDir;
     DIR *backupDir;
     int updateInterval;
-    bool backgrounded;
     
     if ((monitoredDir = opendir(monitoredPath)) == NULL) {
         perror(argv[1]);
@@ -282,10 +282,10 @@ int main(int argc, const char * argv[], char* envp[]) {
     }
     
     if (argc == 5 && strcmp(argv[4], "&") == 0) {
+        backgroundProcess();
         backgrounded = true;
-    } else
-        backgrounded = false;
-    
+    }
+        
     // install sigchild handler
     struct sigaction action;
     action.sa_handler = sigchld_handler;
@@ -311,7 +311,7 @@ int main(int argc, const char * argv[], char* envp[]) {
     time_t latestRestoreDate;
     time(&latestRestoreDate);
     latestRestorePoint = fullBackup(monitoredPath, backupPath, &latestRestoreDate);
-    printf("Latest restore point: %s\n", latestRestorePoint);
+    if (!backgrounded) printf("Latest restore point: %s\n", latestRestorePoint);
     
     
     while (true) {
@@ -321,7 +321,7 @@ int main(int argc, const char * argv[], char* envp[]) {
         while ((counter = sleep(counter)) != 0);
         
         backupModifiedFiles(monitoredPath, backupPath, latestRestorePoint, &latestRestoreDate);
-        printf("Latest restore point: %s\n", latestRestorePoint);
+        if (!backgrounded) printf("Latest restore point: %s\n", latestRestorePoint);
     }
     
     return 0;
