@@ -246,9 +246,9 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
 
 int main(int argc, const char * argv[], char* envp[]) {
     // usage: bckp dir1 dir2 dt &
-    if (argc != 4 && argc != 5) {
-        fprintf(stderr, "Usage: %s dir_to_monitor dir_backup \n", argv[0]);
-        fprintf(stderr, "Usage: %s dir_to_monitor dir_backup & \n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s dir_to_monitor dir_backup time_interval \n", argv[0]);
+        fprintf(stderr, "Usage: %s dir_to_monitor dir_backup time_interval \n", argv[0]);
         exit(1);
     }
     
@@ -258,7 +258,6 @@ int main(int argc, const char * argv[], char* envp[]) {
     DIR *monitoredDir;
     DIR *backupDir;
     int updateInterval;
-    bool backgrounded;
     
     if ((monitoredDir = opendir(monitoredPath)) == NULL) {
         perror(argv[1]);
@@ -280,11 +279,6 @@ int main(int argc, const char * argv[], char* envp[]) {
         fprintf(stderr, "Invalid update interval");
         exit(4);
     }
-    
-    if (argc == 5 && strcmp(argv[4], "&") == 0) {
-        backgrounded = true;
-    } else
-        backgrounded = false;
     
     // install sigchild handler
     struct sigaction action;
