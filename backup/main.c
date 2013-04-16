@@ -304,6 +304,16 @@ int main(int argc, const char * argv[], char* envp[]) {
         exit(7);
     }
     
+    // install sigusr1 handler
+    struct sigaction action3;
+    action3.sa_handler = sigusr1_handler;
+    sigemptyset(&action3.sa_mask);
+    action3.sa_flags = 0;
+    if (sigaction(SIGINT, &action3, NULL) < 0) {
+        fprintf(stderr, "Unable to install SIGINT handler\n");
+        exit(7);
+    }
+    
     // do them backups loop here
     char * latestRestorePoint;
     time_t latestRestoreDate;
