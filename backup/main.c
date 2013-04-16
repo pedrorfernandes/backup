@@ -40,7 +40,7 @@ void sigusr1_handler(int signo) {
     while (waitpid(-1, &status, 0))
         if (errno == ECHILD)
             break;
-    printf("All child processes terminated, exiting...\n");
+    printf("All child processes are terminated, exiting...\n");
     exit(0);
 }
 
@@ -82,7 +82,7 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
             // ignore ".hidden" files
             && strncmp(direntp->d_name, ".", 1)
             && strcmp(direntp->d_name, BACKUPINFO)) {
-            printf("Backed up %-25s\n", direntp->d_name);
+            printf("Backed up a new file: %-25s\n", direntp->d_name);
             chdir(path);
             sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
             sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
@@ -124,9 +124,7 @@ int createRestorePoint(const char* backupPath, time_t * updateTime, char ** rest
     return bckpinfo;
 }
 
-// returns the created/latest backup folder path
-// for example: "backupPath/2013_04_13_14_56_19"
-void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char* latestRestorePoint, time_t* lastUpdateTime) {
+int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char* latestRestorePoint, time_t* lastUpdateTime) {
     DIR * monitoredDir = opendir(monitoredPath);
     
     struct dirent *direntp;
@@ -150,6 +148,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     if (filesDeleted(monitoredPath, previousBckpInfo) == 0) {
         bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
         restorePointCreated = true;
+        printf("Detected file deletion: new restore point created\n");
     }
     
     chdir(monitoredPath);
@@ -184,7 +183,7 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                 rewinddir(monitoredDir);
             } else if ( fileModified && restorePointCreated) {
                 chdir(path);
-                printf("Backed up %-25s\n", direntp->d_name);
+                printf("Backed up modified file: %-25s\n", direntp->d_name);
                 sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                 sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                 copyFile(fromPath, toPath);
@@ -198,11 +197,11 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
                     char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
                     if(fileLine != NULL){
                         sprintf(fileInfo, "%s\n", fileLine);
-                        printf("Writing to bckpinfo: %s\n", fileLine);
+                        //printf("Writing to bckpinfo: %s\n", fileLine);
                         write(bckpinfo, fileInfo, strlen(fileInfo));
                     } else {
                         // a file that is not in the latest bckpinfo must be backed up again
-                        printf("Backed up %-25s\n", direntp->d_name);
+                        printf("Backed up a new file: %-25s\n", direntp->d_name);
                         sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                         sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                         copyFile(fromPath, toPath);
@@ -242,6 +241,11 @@ void backupModifiedFiles(const char* monitoredPath, const char* backupPath, char
     
     free(previousBckpInfo);
     free(restorePoint);
+    
+    if (restorePointCreated)
+        return 1;
+    else
+        return 0;
 }
 
 int main(int argc, const char * argv[], char* envp[]) {
@@ -305,7 +309,14 @@ int main(int argc, const char * argv[], char* envp[]) {
     time_t latestRestoreDate;
     time(&latestRestoreDate);
     latestRestorePoint = fullBackup(monitoredPath, backupPath, &latestRestoreDate);
-    printf("Latest restore point: %s\n", latestRestorePoint);
+    //printf("Latest restore point: %s\n", latestRestorePoint);
+    
+    // print out the date of the backup
+    char * date = malloc(MAX_LEN * sizeof(char));
+    struct tm * dateinfo;
+    dateinfo = localtime(&latestRestoreDate);
+    strftime(date, MAX_LEN, "Latest backup: %c\n", dateinfo);
+    puts(date);
     
     
     while (true) {
@@ -314,9 +325,16 @@ int main(int argc, const char * argv[], char* envp[]) {
         int counter = updateInterval;
         while ((counter = sleep(counter)) != 0);
         
-        backupModifiedFiles(monitoredPath, backupPath, latestRestorePoint, &latestRestoreDate);
-        printf("Latest restore point: %s\n", latestRestorePoint);
+        if (backupModifiedFiles(monitoredPath, backupPath, latestRestorePoint, &latestRestoreDate) ){
+            //printf("Latest restore point: %s\n", latestRestorePoint);
+            dateinfo = localtime(&latestRestoreDate);
+            strftime(date, MAX_LEN, "Latest backup: %c\n", dateinfo);
+            puts(date);
+        }
     }
+    
+    free(date);
+    free(dateinfo);
     
     return 0;
 }
