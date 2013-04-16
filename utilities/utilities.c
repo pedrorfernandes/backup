@@ -285,15 +285,12 @@ char* timeStructToBackupDate(time_t time) {
     
     //year_month_day_hours_minutes_seconds
     sprintf(dateStr, "%04d_%02d_%02d_%02d_%02d_%02d",
-            date->tm_year,
-            date->tm_mon,
+            date->tm_year + 1900,
+            date->tm_mon + 1,
             date->tm_mday,
             date->tm_hour,
             date->tm_min,
             date->tm_sec);
-    
-    date->tm_year += 1900;
-    date->tm_mon += 1;
     
     return dateStr;
 }
