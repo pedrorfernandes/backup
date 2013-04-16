@@ -35,6 +35,8 @@ time_t backupDateToTimeStruct(const char * backupDate);
 
 time_t* createBackupTimeArray(char** backupArray, time_t* backupTimeArray, unsigned int numberOfBackups);
 
+char* backupDateToReadableDate(const char* backupDate);
+
 char** createStrArray(unsigned int numberOfStrings, unsigned int sizeOfStrings);
 
 void freeStrArray(char** strArray, unsigned int numberOfStrings);

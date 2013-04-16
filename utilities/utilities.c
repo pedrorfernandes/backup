@@ -256,7 +256,12 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
 }
 
 time_t backupDateToTimeStruct(const char * backupDate) {
+    time_t now;
+    time(&now);
     struct tm date;
+    // we must do this to get the daylight savings time parameter
+    // or else return values from the same date are inconsistent
+    date = *localtime(&now);
     int year, mon;
     sscanf(backupDate, "%04d_%02d_%02d_%02d_%02d_%02d",
            &year,
@@ -269,7 +274,7 @@ time_t backupDateToTimeStruct(const char * backupDate) {
     mon -= 1;
     date.tm_year = year;
     date.tm_mon = mon;
-    
+        
     return mktime(&date);
 }
 
@@ -280,12 +285,15 @@ char* timeStructToBackupDate(time_t time) {
     
     //year_month_day_hours_minutes_seconds
     sprintf(dateStr, "%04d_%02d_%02d_%02d_%02d_%02d",
-            date->tm_year + 1900,
-            date->tm_mon + 1,
+            date->tm_year,
+            date->tm_mon,
             date->tm_mday,
             date->tm_hour,
             date->tm_min,
             date->tm_sec);
+    
+    date->tm_year += 1900;
+    date->tm_mon += 1;
     
     return dateStr;
 }
@@ -298,11 +306,14 @@ int cmpBackupDates(const void *date1, const void *date2) {
     const time_t date1time = backupDateToTimeStruct(*date1string);
     const time_t date2time = backupDateToTimeStruct(*date2string);
     
+    // date2 - date1
     double diff = difftime(date1time, date2time);
     
     if(diff < 0)
+        // date2 < date1
         return 1;
     else if(diff > 0)
+        // date2 > date1
         return -1;
     else
         return 0;
@@ -326,5 +337,15 @@ int getChoice(const char *prompt, int maxChoice) {
 
     printf("EOF problem or error!\n");
     exit(1);
+}
+
+char* backupDateToReadableDate(const char* backupDate){
+    char * datestr = malloc(MAX_LEN * sizeof(char));
+    struct tm * dateinfo;
+    
+    time_t date = backupDateToTimeStruct(backupDate);
+    dateinfo = localtime(&date);
+    strftime(datestr, MAX_LEN, "%c", dateinfo);
+    return datestr;
 }
 
