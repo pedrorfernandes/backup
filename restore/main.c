@@ -27,6 +27,8 @@
 
 #include "../utilities/utilities.h"
 
+char * path;
+
 void printAvailableBackups(char **backupsArray, size_t numberOfBackups)
 {
     int i = 0;
@@ -135,7 +137,7 @@ int printBackupInfo(const char* bckpInfoPath) {
 }
 
 
-int main ( int argc, const char * argv[] )
+int main (int argc, const char * argv[], char* envp[])
 {
     
     // usage: rstr dir2 dir3
@@ -144,6 +146,7 @@ int main ( int argc, const char * argv[] )
         exit ( 1 );
     }
     
+    path = getenv("PWD");
     DIR *backupDir;
     DIR *restoreDir;
     
@@ -189,7 +192,7 @@ int main ( int argc, const char * argv[] )
     char* fullBckpInfoPath = getBackupInfo(selectedBckpPath);
     
     // moving out of the backupDir
-    chdir("..");
+    chdir(path);
     
     DIR *selectedBackup;
     
