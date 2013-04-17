@@ -46,7 +46,7 @@ char** getAndPrintFolders ( DIR * backupDir ) {
     struct dirent *direntp;
     struct stat stat_buf;
     
-    int numberOfBackups = getNumOfDirectories ( backupDir );
+    int numberOfBackups = getNumOfBackups ( backupDir );
     
     char** backups = createStrArray(numberOfBackups, DATE_LEN);
     
@@ -61,7 +61,8 @@ char** getAndPrintFolders ( DIR * backupDir ) {
         if ( S_ISDIR ( stat_buf.st_mode )
             // and ignore the "." and ".."
             && strcmp ( direntp->d_name, "." )
-            && strcmp ( direntp->d_name, ".." ) ) {
+            && strcmp ( direntp->d_name, ".." )
+            && isBackupString(direntp->d_name) ) {
             sprintf (backups[n], "%s", direntp->d_name );
             n++;
         }
@@ -170,7 +171,7 @@ int main ( int argc, const char * argv[] )
     chdir ( argv[1] );
     
     char** backups = getAndPrintFolders ( backupDir );
-    int numberOfBackups = getNumOfDirectories ( backupDir );
+    int numberOfBackups = getNumOfBackups( backupDir );
     
     char prompt[MAX_LEN];
     sprintf(prompt,"Which restore point? (0 to cancel)\n%s", PROMPT);

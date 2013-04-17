@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define PROMPT "> "
 #define DATE_LEN 20
@@ -48,6 +49,10 @@ unsigned int convertToUnsignedInt(char c);
 int getNumOfLines(const char * filePath);
 
 int getNumOfDirectories(DIR * folderDir);
+
+int getNumOfBackups(DIR * folderDir);
+
+int isBackupString(char * string);
 
 char* getLineAt(unsigned int line, const char * filePath);
 

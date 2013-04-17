@@ -99,6 +99,63 @@ int getNumOfDirectories ( DIR * folderDir )
     return n;
 }
 
+int getNumOfBackups(DIR * folderDir){
+    struct dirent *direntp;
+    struct stat stat_buf;
+    int n = 0;
+    char * folderName = malloc(MAX_LEN * sizeof(char));
+    
+    while ( ( direntp = readdir ( folderDir ) ) != NULL ) {
+        if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
+            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
+            return -1;
+        }
+        if ( S_ISDIR ( stat_buf.st_mode )
+            // and ignore the "." and ".."
+            && strcmp ( direntp->d_name, "." )
+            && strcmp ( direntp->d_name, ".." ) ) {
+            
+            if ( isBackupString(direntp->d_name) )
+                n++;
+        }
+    }
+    
+    free(folderName);
+    rewinddir ( folderDir );
+    return n;
+}
+
+int isBackupString(char * string){
+    if (strlen(string) != DATE_LEN-1)
+        return 0;
+    
+    char * stringcopy = malloc(DATE_LEN * sizeof(char));
+    strcpy(stringcopy, string);
+    char * currentNumber;
+    currentNumber = strtok(stringcopy, "_");
+
+    // check if there is a year
+    if ( ! (atoi(currentNumber) >= 1900 && atoi(currentNumber) <= 9999) ){
+        free(stringcopy);
+        free(currentNumber);
+        return 0;
+    }
+    
+    // now check the rest of the numbers
+    currentNumber = strtok(NULL, "_");
+    while (currentNumber != NULL) {
+        if ( !(atoi(currentNumber) >= 0 && atoi(currentNumber) <= 99) ){
+            free(stringcopy);
+            free(currentNumber);
+            return 0;
+        }
+        currentNumber = strtok(NULL, "_");
+    }
+    free(stringcopy);
+    free(currentNumber);
+    return 1;
+}
+
 
 char* getLineAt ( unsigned int line, const char * filePath )
 {
