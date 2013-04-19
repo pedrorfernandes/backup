@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EB1677E81711C382000794A9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = EB1677E71711C382000794A9 /* main.c */; };
+		EB1677E81711C382000794A9 /* backup.c in Sources */ = {isa = PBXBuildFile; fileRef = EB1677E71711C382000794A9 /* backup.c */; };
 		EB1677EA1711C382000794A9 /* backup.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = EB1677E91711C382000794A9 /* backup.1 */; };
 		EB23C72317199B5500A443FA /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = EB23C72117199B5500A443FA /* utilities.c */; };
 /* End PBXBuildFile section */
@@ -27,10 +27,11 @@
 
 /* Begin PBXFileReference section */
 		EB1677E41711C382000794A9 /* backup */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = backup; sourceTree = BUILT_PRODUCTS_DIR; };
-		EB1677E71711C382000794A9 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		EB1677E71711C382000794A9 /* backup.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = backup.c; sourceTree = "<group>"; };
 		EB1677E91711C382000794A9 /* backup.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = backup.1; sourceTree = "<group>"; };
 		EB23C72117199B5500A443FA /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		EB23C72217199B5500A443FA /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
+		EBA2D2C01721C83500AF23C0 /* backup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = backup.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +65,8 @@
 		EB1677E61711C382000794A9 /* backup */ = {
 			isa = PBXGroup;
 			children = (
-				EB1677E71711C382000794A9 /* main.c */,
+				EB1677E71711C382000794A9 /* backup.c */,
+				EBA2D2C01721C83500AF23C0 /* backup.h */,
 				EB1677E91711C382000794A9 /* backup.1 */,
 			);
 			path = backup;
@@ -130,7 +132,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB1677E81711C382000794A9 /* main.c in Sources */,
+				EB1677E81711C382000794A9 /* backup.c in Sources */,
 				EB23C72317199B5500A443FA /* utilities.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
