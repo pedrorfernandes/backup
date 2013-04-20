@@ -14,20 +14,7 @@
  dir3 is the directory where the backed up files are going to be restored.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
-
-#include "../utilities/utilities.h"
-
-char * path;
+#include "restore.h"
 
 void printAvailableBackups(char **backupsArray, size_t numberOfBackups)
 {
@@ -250,9 +237,7 @@ int main (int argc, const char * argv[], char* envp[])
         free(destFilePath);
         free(originFilePath);
     }
-    
-    // TODO the char** backups generating function must return a size so we can free the memory
-    
+        
     // clean up the strings
     free(selectedBckpPath);
     free(fullBckpInfoPath);    

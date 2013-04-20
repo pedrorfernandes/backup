@@ -8,8 +8,8 @@
 //  ei11122 - Pedro Fernandes
 //
 
-#ifndef _backup_h
-#define _backup_h
+#ifndef backup_h
+#define backup_h
 
 #include <stdio.h>
 #include <stdlib.h>
