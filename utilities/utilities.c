@@ -212,7 +212,7 @@ int copyFile( const char* fromPath, const char* toPath ) {
     if ( pid == 0 ) {
         execlp ( "cp", "cp", "-f", fromPath, toPath, NULL);
         printf ( "Copy failed! \n" );
-        return ( 1 );
+        return 1;
     }
     
     return(0);

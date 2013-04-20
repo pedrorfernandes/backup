@@ -32,24 +32,46 @@ void sigchld_handler(int signo) {
 // returns the created/latest backup folder path
 // for example: "backupPath/2013_04_13_14_56_19"
 char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* backupDate) {
-    DIR * monitoredDir = opendir(monitoredPath);
+    DIR * monitoredDir;;
+    
+    if ((monitoredDir = opendir(monitoredPath)) == NULL) {
+        perror(monitoredPath);
+        exit(2);
+    }
     
     struct dirent *direntp;
     struct stat stat_buf;
     
-    chdir(backupPath);
+    if(chdir(backupPath) != 0) {
+        perror("Problem changing into the backup directory");
+        exit(8);
+    }
+    
     time(backupDate);
+    
     char* restorePoint = timeStructToBackupDate(*backupDate);
-    mkdir(restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    chdir(restorePoint);
+    if(mkdir(restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+        perror("Problem creating the restore directory");
+        exit(5);
+    }
+    if(chdir(restorePoint) != 0) {
+        perror("Problem changing into the restore directory");
+        exit(8);
+    }
     int bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
     // return from the backup folder
-    chdir(pwd);
+    if(chdir(pwd) != 0) {
+        perror("Problem changing back into the backup directory");
+        exit(8);
+    }
     
     char fromPath[MAX_LEN];
     char toPath[MAX_LEN];
     char fileInfo[MAX_LEN];
-    chdir(monitoredPath);
+    if(chdir(monitoredPath) != 0) {
+        perror("Problem changing back into the monitored path");
+        exit(8);
+    }
     while ((direntp = readdir(monitoredDir)) != NULL) {
         if (stat(direntp->d_name, &stat_buf) != 0) {
             printf("Error number %d, %s: %s\n", errno, direntp->d_name, strerror(errno));
@@ -60,13 +82,23 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
             && strncmp(direntp->d_name, ".", 1)
             && strcmp(direntp->d_name, BACKUPINFO)) {
             printf("Backed up a new file: %-25s\n", direntp->d_name);
-            chdir(pwd);
+            if(chdir(pwd) != 0) {
+                perror(pwd);
+                exit(8);
+            }
             sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
             sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
-            copyFile(fromPath, toPath);
+            if(copyFile(fromPath, toPath) != 0)
+                printf("Problem copying %s\n", fromPath);
             sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
-            write(bckpinfo, fileInfo, strlen(fileInfo));
-            chdir(monitoredPath);
+            if(write(bckpinfo, fileInfo, strlen(fileInfo)) == -1) {
+                perror("Problem writing to bckpinfo");
+                exit(9);
+            }
+            if (chdir(monitoredPath) != 0) {
+                perror("Problem changing back into the monitored path");
+                exit(8);
+            }
         }
     }
     
@@ -81,7 +113,10 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
     }
         
     // return from monitoredPath
-    chdir(pwd);
+    if (chdir(pwd) != 0) {
+        perror(pwd);
+        exit(8);
+    }
     char * latestRestorePoint = malloc(MAX_LEN * sizeof (char));
     sprintf(latestRestorePoint, "%s/%s", backupPath, restorePoint);
     free(restorePoint);
@@ -89,20 +124,37 @@ char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* back
 }
 
 int createRestorePoint(const char* backupPath, time_t * updateTime, char ** restorePoint, char* latestRestorePoint){
-    chdir(backupPath);
+    if(chdir(backupPath) != 0) {
+        perror("Problem changing into the backup directory");
+        exit(8);
+    }
     time(updateTime);
     *restorePoint = timeStructToBackupDate(*updateTime);
     sprintf(latestRestorePoint, "%s/%s", backupPath, *restorePoint);
-    mkdir(*restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    chdir(*restorePoint);
+    if(mkdir(*restorePoint, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+        perror("Problem creating restore point");
+        exit(5);
+    }
+    if(chdir(*restorePoint) != 0) {
+        perror("Problem changing into the restore directory");
+        exit(8);
+    }
     int bckpinfo = open(BACKUPINFO, O_WRONLY | O_CREAT | O_APPEND, 0644);
     // return from the backup folder
-    chdir(pwd);
+    if (chdir(pwd) != 0) {
+        perror(pwd);
+        exit(8);
+    }
     return bckpinfo;
 }
 
 int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char* latestRestorePoint, time_t* lastUpdateTime) {
-    DIR * monitoredDir = opendir(monitoredPath);
+    DIR * monitoredDir;
+    
+    if ((monitoredDir = opendir(monitoredPath)) == NULL) {
+        perror(monitoredPath);
+        exit(2);
+    }
     
     struct dirent *direntp;
     struct stat stat_buf;
@@ -124,7 +176,10 @@ int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char*
         printf("Detected file deletion: new restore point created\n");
     }
     
-    chdir(monitoredPath);
+    if(chdir(monitoredPath) != 0) {
+        perror("Problem changing back into the monitored path");
+        exit(8);
+    }
     while ((direntp = readdir(monitoredDir)) != NULL) {
         if (stat(direntp->d_name, &stat_buf) != 0) {
             printf("Error number %d: %s\n", errno, strerror(errno));
@@ -146,63 +201,106 @@ int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char*
 #endif
             bool fileModified = ( (difftime(modTime, *lastUpdateTime) > 0)
                                  || (difftime(chgTime, *lastUpdateTime) > 0) );
-            
-            if ( fileModified && !restorePointCreated) {
-                chdir(pwd);
+
+            if (fileModified && !restorePointCreated) {
+                if (chdir(pwd) != 0) {
+                    perror(pwd);
+                    exit(8);
+                }
                 bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
-                chdir(monitoredPath);
+                if (chdir(monitoredPath) != 0) {
+                    perror("Problem changing back into the monitored path");
+                    exit(8);
+                }
                 restorePointCreated = true;
                 // if the restore point was created, we must check all files again
                 // to update the newly created bckpinfo
                 rewinddir(monitoredDir);
             } else if ( fileModified && restorePointCreated) {
-                chdir(pwd);
+                if (chdir(pwd) != 0) {
+                    perror(pwd);
+                    exit(8);
+                }
+                
                 printf("Backed up modified file: %-25s\n", direntp->d_name);
                 sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                 sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
                 copyFile(fromPath, toPath);
                 sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
-                write(bckpinfo, fileInfo, strlen(fileInfo));
-                chdir(monitoredPath);
+                
+                if (write(bckpinfo, fileInfo, strlen(fileInfo)) == -1) {
+                    perror("Problem writing to bckpinfo");
+                    exit(9);
+                }
+                
+                if (chdir(monitoredPath) != 0) {
+                    perror("Problem changing back into the monitored path");
+                    exit(8);
+                }
                 
             } else {
                 if (restorePointCreated) {
-                    chdir(pwd);
+                    if (chdir(pwd) != 0) {
+                        perror(pwd);
+                        exit(8);
+                    }
                     char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
                     if(fileLine != NULL){
                         sprintf(fileInfo, "%s\n", fileLine);
                         // write to bckpinfo the information about this file
-                        write(bckpinfo, fileInfo, strlen(fileInfo));
+                        if (write(bckpinfo, fileInfo, strlen(fileInfo)) == -1) {
+                            perror("Problem writing to bckpinfo");
+                            exit(9);
+                        }
                     } else {
                         // a file that is not in the latest bckpinfo must be backed up again
                         printf("Backed up a new file: %-25s\n", direntp->d_name);
                         sprintf(fromPath, "%s/%s", monitoredPath, direntp->d_name);
                         sprintf(toPath, "%s/%s/%s", backupPath, restorePoint, direntp->d_name);
-                        copyFile(fromPath, toPath);
+                        if(copyFile(fromPath, toPath) != 0)
+                            printf("Problem copying %s\n", fromPath);
                         sprintf(fileInfo, "%s/%s\n", restorePoint, direntp->d_name);
-                        write(bckpinfo, fileInfo, strlen(fileInfo));
+                        if (write(bckpinfo, fileInfo, strlen(fileInfo)) == -1) {
+                            perror("Problem writing to bckpinfo");
+                            exit(9);
+                        }
                     }
                     free(fileLine);
-                    chdir(monitoredPath);
+                    if (chdir(monitoredPath) != 0) {
+                        perror("Problem changing back into the monitored path");
+                        exit(8);
+                    }
                 } else {
-                    chdir(pwd);
+                    if (chdir(pwd) != 0) {
+                        perror(pwd);
+                        exit(8);
+                    }
                     char* fileLine = getFileLineFromBckpInfo(previousBckpInfo, direntp->d_name);
                     if (fileLine == NULL) {
                         // some file that is not in the latest bckpinfo showed up! We must backup this.
                         bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
-                        chdir(monitoredPath);
+                        if (chdir(monitoredPath) != 0) {
+                            perror("Problem changing back into the monitored path");
+                            exit(8);
+                        }
                         restorePointCreated = true;
                         rewinddir(monitoredDir);
                     }
                     free(fileLine);
-                    chdir(monitoredPath);
+                    if (chdir(monitoredPath) != 0) {
+                        perror("Problem changing back into the monitored path");
+                        exit(8);
+                    }
                 }
             }
         }
     }
     
 
-    chdir(pwd);
+    if (chdir(pwd) != 0) {
+        perror(pwd);
+        exit(8);
+    }
     if (restorePointCreated){
         *lastUpdateTime = thisUpdateTime;
         close(bckpinfo);
@@ -244,7 +342,10 @@ int main(int argc, const char * argv[], char* envp[]) {
     
     if ((backupDir = opendir(backupPath)) == NULL) {
         // if backup dir doesnt exist, create it
-        mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if(mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+            perror("Problem creating the backup directory");
+            exit(5);
+        }
         if ((backupDir = opendir(argv[2])) == NULL) {
             perror(argv[2]);
             exit(3);
@@ -301,8 +402,7 @@ int main(int argc, const char * argv[], char* envp[]) {
     dateinfo = localtime(&latestRestoreDate);
     strftime(date, MAX_LEN, "Latest backup: %c\n", dateinfo);
     puts(date);
-    
-    
+
     while (true) {
         //Wait for the updateInterval duration
         int counter = updateInterval;
