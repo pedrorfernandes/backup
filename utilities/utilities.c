@@ -2,7 +2,7 @@
 //
 //  Projeto 1 SOPE
 //
-//  Turma 1
+//  T1G05 Turma 1 Grupo 5
 //
 //  ei11089 - Diogo Santos
 //  ei11122 - Pedro Fernandes
@@ -67,6 +67,9 @@ int getNumOfLines ( const char * filePath )
             number_of_lines++;
         }
     }
+    
+    // the last line doesn't have a '\n' at the end of the file.
+    number_of_lines++;
     
     if(close(file) != 0) {
         printf("Problem closing file. Error number %d: %s\n", errno, strerror(errno));
@@ -220,7 +223,7 @@ int copyFile ( const char* fromPath, const char* toPath ) {
     
 }
 
-char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
+char* getBackupPathFromInfoLine(const char* bckpInfoLine) {
     
     if(strlen(bckpInfoLine) < DATE_LEN - 1) {
         return NULL;
@@ -234,7 +237,7 @@ char* extractBackupPathFromInfoLine(const char* bckpInfoLine) {
     return backupPath;
 }
 
-char* extractFileNameFromInfoLine(const char* bckpInfoLine) {
+char* getFileNameFromInfoLine(const char* bckpInfoLine) {
     
     if(strlen(bckpInfoLine) <= DATE_LEN - 1) {
         fprintf(stderr, "Invalid filename\n");
@@ -263,7 +266,7 @@ char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName) 
     for(; i <= getNumOfLines(bckpInfoPath); i++) {
         char* fileLine = getLineAt(i, bckpInfoPath);
         
-        char* fileFromBckpInfo = extractFileNameFromInfoLine(fileLine);
+        char* fileFromBckpInfo = getFileNameFromInfoLine(fileLine);
         if(strcmp(fileName, fileFromBckpInfo) == 0){
             free(fileFromBckpInfo);
             return fileLine;
@@ -297,7 +300,7 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
     int i = 1;
     for(; i <= getNumOfLines(bckpInfoPath); i++) {
         char* fileLine = getLineAt(i, bckpInfoPath);
-        char* fileFromBckpInfo = extractFileNameFromInfoLine(fileLine);
+        char* fileFromBckpInfo = getFileNameFromInfoLine(fileLine);
         
         sprintf(filePath, "%s/%s", dirPath, fileFromBckpInfo);
         

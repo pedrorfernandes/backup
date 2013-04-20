@@ -2,7 +2,7 @@
 //
 //  Projeto 1 SOPE
 //
-//  Turma 1
+//  T1G05 Turma 1 Grupo 5
 //
 //  ei11089 - Diogo Santos
 //  ei11122 - Pedro Fernandes
@@ -64,9 +64,9 @@ char* getFileFullPath(const char* path, const char* fileName);
 
 int copyFile(const char* fromPath, const char* toPath);
 
-char* extractBackupPathFromInfoLine(const char* bckpInfoLine);
+char* getBackupPathFromInfoLine(const char* bckpInfoLine);
 
-char* extractFileNameFromInfoLine(const char* bckpInfoLine);
+char* getFileNameFromInfoLine(const char* bckpInfoLine);
 
 char* getFileLineFromBckpInfo(const char * bckpInfoPath, const char * fileName);
 

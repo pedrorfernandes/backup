@@ -1,18 +1,12 @@
-//  main.c
+//  restore.c
 //
 //  Projeto 1 SOPE
 //
-//  Turma 1
+//  T1G05 Turma 1 Grupo 5
 //
 //  ei11089 - Diogo Santos
 //  ei11122 - Pedro Fernandes
 //
-
-/*
- This program is launched through the command rstr dir2 dir3 where
- dir2 is the directory that was used to backup the files;
- dir3 is the directory where the backed up files are going to be restored.
- */
 
 #include "restore.h"
 
@@ -30,24 +24,24 @@ void printAvailableBackups(char **backupsArray, size_t numberOfBackups)
     free(datestr);
 }
 
-char** getAndPrintFolders ( DIR * backupDir ) {
+char** getAndPrintFolders(DIR * backupDir) {
     
     struct dirent *direntp;
     struct stat stat_buf;
     
-    int numberOfBackups = getNumOfBackups ( backupDir );
+    int numberOfBackups = getNumOfBackups(backupDir);
     
     char** backups = createStrArray(numberOfBackups, DATE_LEN);
     
     int n = 0;
     
-    while ( ( direntp = readdir ( backupDir ) ) != NULL ) {
-        if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
-            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
+    while ( ( direntp = readdir(backupDir) ) != NULL ) {
+        if ( stat(direntp->d_name, &stat_buf) != 0 ) {
+            printf( "Error number %d: %s\n", errno, strerror(errno) );
             freeStrArray(backups, numberOfBackups);
             return NULL;
         }
-        if ( S_ISDIR ( stat_buf.st_mode )
+        if ( S_ISDIR( stat_buf.st_mode )
             // and ignore the "." and ".."
             && strcmp ( direntp->d_name, "." )
             && strcmp ( direntp->d_name, ".." )
@@ -57,37 +51,11 @@ char** getAndPrintFolders ( DIR * backupDir ) {
         }
     }
     
-    rewinddir ( backupDir );
+    rewinddir(backupDir);
     
     qsort(backups, numberOfBackups, sizeof(char *), cmpBackupDates);
     printAvailableBackups(backups, numberOfBackups);
     return backups;
-}
-
-int printFiles (DIR * backupDir) {
-    //This only prints the files in the backup folder, use showBackupInfo to print the bckpInfo file
-    
-    struct dirent *direntp;
-    struct stat stat_buf;
-    
-    int n = 1;
-    
-    while ( ( direntp = readdir ( backupDir ) ) != NULL ) {
-        if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
-            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
-            return -1;
-        }
-        if ( S_ISREG ( stat_buf.st_mode )
-            // ignore ".hidden" files
-            && strncmp(direntp->d_name, ".", 1)
-            && strcmp ( direntp->d_name, BACKUPINFO ) ) {
-            printf ( "%d- %-25s\n", n, direntp->d_name );
-            n++;
-        }
-    }
-    
-    rewinddir ( backupDir );
-    return 0;
 }
 
 int printBackupInfo(const char* bckpInfoPath) {
@@ -95,19 +63,19 @@ int printBackupInfo(const char* bckpInfoPath) {
     int numberOfFiles = getNumOfLines(bckpInfoPath);
     char* infoLine;
     
-    int i = 1;
-    for( ; i <= numberOfFiles; i++) {
+    int i;
+    for(i = 1; i <= numberOfFiles; i++) {
         
         printf("%d - ", i);
         
         if( ( infoLine = getLineAt(i, bckpInfoPath) ) == NULL) {
-            printf("Error reading line from __bckpinfo__\n");
+            printf("Error reading line from %s\n", BACKUPINFO);
             free(infoLine);
             return -1;
         }
         
-        char* fileName = extractFileNameFromInfoLine(infoLine);
-        char* backupDate = extractBackupPathFromInfoLine(infoLine);
+        char* fileName = getFileNameFromInfoLine(infoLine);
+        char* backupDate = getBackupPathFromInfoLine(infoLine);
         char* datestr = backupDateToReadableDate(backupDate);
         
         printf("%s - backed up at %s\n", fileName, datestr);
@@ -130,38 +98,37 @@ int main (int argc, const char * argv[], char* envp[])
     // usage: rstr dir2 dir3
     if ( argc != 3 ) {
         fprintf ( stderr, "Usage: %s dir_backup dir_restore\n", argv[0] );
-        exit ( 1 );
+        exit(1);
     }
     
-    path = getenv("PWD");
+    pwd = getenv("PWD");
     DIR *backupDir;
     DIR *restoreDir;
     
-    if ( ( backupDir = opendir(argv[1])) == NULL ) {
+    if ( ( backupDir = opendir(argv[1]) ) == NULL ) {
         free(backupDir);
-        perror ( argv[1] );
-        exit ( 2 );
+        perror(argv[1]);
+        exit(2);
     }
     
-    if ( ( restoreDir = opendir ( argv[2] ) ) == NULL ) {
+    if ( ( restoreDir = opendir(argv[2]) ) == NULL ) {
         // if restore dir doesnt exist, create it
-        mkdir ( argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
-        if ( ( restoreDir = opendir ( argv[2] ) ) == NULL ) {
-            perror ( argv[2] );
+        mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if ( ( restoreDir = opendir(argv[2]) ) == NULL ) {
+            perror(argv[2]);
             closedir(backupDir);
             free(backupDir);
             free(restoreDir);
-            exit ( 3 );
+            exit(3);
         }
     }
     
-    printf ( "The following restore points are available:\n" );
-    //printf ( "(year_month_day_hours_minutes_seconds)\n" );
+    printf("The following restore points are available:\n");
     // moving into backupDir will allow directory reading
-    chdir ( argv[1] );
+    chdir(argv[1]);
     
-    char** backups = getAndPrintFolders ( backupDir );
-    int numberOfBackups = getNumOfBackups( backupDir );
+    char** backups = getAndPrintFolders(backupDir);
+    int numberOfBackups = getNumOfBackups(backupDir);
     
     char prompt[MAX_LEN];
     sprintf(prompt,"Which restore point? (0 to cancel)\n%s", PROMPT);
@@ -179,47 +146,46 @@ int main (int argc, const char * argv[], char* envp[])
     char* fullBckpInfoPath = getBackupInfo(selectedBckpPath);
     
     // moving out of the backupDir
-    chdir(path);
+    chdir(pwd);
     
     DIR *selectedBackup;
-    
-    if ( ( selectedBackup = opendir ( selectedBckpPath ) ) == NULL ) {
+    if ( ( selectedBackup = opendir(selectedBckpPath) ) == NULL ) {
         freeStrArray(backups, numberOfBackups);
-        perror ( selectedBckpPath );
-        exit ( 2 );
+        perror(selectedBckpPath);
+        exit(2);
     }
+    
     char * datestr = backupDateToReadableDate(backups[lineNumber]);
     printf("\n%s restore point chosen.\n", datestr);
     free(datestr);
     freeStrArray(backups, numberOfBackups);
-    printf ( "This backup contains the following files:\n\n" );
+    printf("This backup contains the following files:\n\n");
     printBackupInfo(fullBckpInfoPath);
     
-    int numberOfFiles = getNumOfLines ( fullBckpInfoPath );
+    int numberOfFiles = getNumOfLines(fullBckpInfoPath);
     sprintf(prompt,"\nSelect a file to restore (0 to cancel):\n%s", PROMPT);
     lineNumber = getChoice(prompt, numberOfFiles  + 1);
     
-    
+    printf("\n");
     if ( lineNumber == numberOfFiles + 1 ) {
         
-        printf ( "Doing full restore!\n" );
+        printf("Doing full restore!\n");
         char* fileRestorePath;
         char* destFilePath;
         char* originFilePath;
         
-        int i = 1;
-        for ( ; i <= getNumOfLines ( fullBckpInfoPath ); i++ ) {
-            //TODO fix this
+        int i;
+        for (i = 1 ; i <= getNumOfLines(fullBckpInfoPath); i++ ) {
             
-            fileRestorePath = getLineAt (i, fullBckpInfoPath);
-            char* fileName = extractFileNameFromInfoLine (fileRestorePath);
-            destFilePath = getFileFullPath ( argv[2], fileName);
-            originFilePath = getFileFullPath ( argv[1], fileRestorePath );
+            fileRestorePath = getLineAt(i, fullBckpInfoPath);
+            char* fileName = getFileNameFromInfoLine(fileRestorePath);
+            destFilePath = getFileFullPath(argv[2], fileName);
+            originFilePath = getFileFullPath(argv[1], fileRestorePath);
             
-            if(copyFile ( originFilePath, destFilePath ) == 0)
-                printf("\nRestored %s successfully!\n", fileName);
+            if(copyFile(originFilePath, destFilePath) == 0)
+                printf("Restored %s successfully!\n", fileName);
             else
-                printf("\nError copying %s!\n", fileName);
+                printf("Error copying %s!\n", fileName);
             
             free(fileRestorePath);
             free(fileName);
@@ -227,13 +193,16 @@ int main (int argc, const char * argv[], char* envp[])
             free(originFilePath);
         }
         
-    } else if ( lineNumber > 0 && lineNumber <=  numberOfFiles) {
-        char* destFilePath = getFileFullPath ( argv[2], extractFileNameFromInfoLine ( getLineAt ( lineNumber, fullBckpInfoPath ) ) );
-        char* originFilePath = getFileFullPath ( argv[1], getLineAt ( lineNumber, fullBckpInfoPath ) );
-        copyFile ( originFilePath, destFilePath );
+    } else if ( lineNumber > 0 && lineNumber <= numberOfFiles ) {
+        char* destFilePath = getFileFullPath( argv[2], getFileNameFromInfoLine(getLineAt(lineNumber, fullBckpInfoPath)) );
+        char* originFilePath = getFileFullPath( argv[1], getLineAt(lineNumber, fullBckpInfoPath) );
+        copyFile(originFilePath, destFilePath);
         
-        printf ( "\n%s restored!\n", getLineAt ( lineNumber, fullBckpInfoPath ) );
-        
+        char* fileName = getFileNameFromInfoLine( getLineAt(lineNumber, fullBckpInfoPath) );
+        destFilePath = getFileFullPath(argv[2], fileName);
+        printf("Restored %s successfully!\n", fileName);
+
+        free(fileName);
         free(destFilePath);
         free(originFilePath);
     }

@@ -2,7 +2,7 @@
 //
 //  Projeto 1 SOPE
 //
-//  Turma 1
+//  T1G05 Turma 1 Grupo 5
 //
 //  ei11089 - Diogo Santos
 //  ei11122 - Pedro Fernandes

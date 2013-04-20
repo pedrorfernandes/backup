@@ -2,7 +2,7 @@
 //
 //  Projeto 1 SOPE
 //
-//  Turma 1
+//  T1G05 Turma 1 Grupo 5
 //
 //  ei11089 - Diogo Santos
 //  ei11122 - Pedro Fernandes
@@ -86,7 +86,7 @@ int backupModifiedFiles(const char* monitoredPath,
  * @param argc Argument count.
  * @param argv The program arguments.
  * @param envp The environmental parameters.
- * @return 0 if successful.
+ * @return 0 if successful, different if an error occurs.
  */
 int main(int argc, const char * argv[], char* envp[]);
 
