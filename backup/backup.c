@@ -324,7 +324,6 @@ int main(int argc, const char * argv[], char* envp[]) {
     // usage: bckp dir1 dir2 dt
     if (argc != 4) {
         fprintf(stderr, "Usage: %s dir_to_monitor dir_backup time_interval \n", argv[0]);
-        fprintf(stderr, "Usage: %s dir_to_monitor dir_backup time_interval \n", argv[0]);
         exit(1);
     }
     
