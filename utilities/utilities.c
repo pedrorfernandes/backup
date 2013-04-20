@@ -280,10 +280,10 @@ int fileExists(const char * filePath) {
     file = open(filePath, O_RDONLY);
 
     if (file == -1)
-        return 1;
+        return 0;
     else {
         close(file);
-        return 0;
+        return 1;
     }
     
 }
@@ -292,8 +292,9 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
     
     char filePath[MAX_LEN];
     
-    int i = 1;
-    for(; i <= getNumOfLines(bckpInfoPath); i++) {
+    int i;
+    int numberOfFiles = getNumOfLines(bckpInfoPath);
+    for(i = 1; i <= numberOfFiles; i++) {
         char* fileLine = getLineAt(i, bckpInfoPath);
         char* fileFromBckpInfo = getFileNameFromInfoLine(fileLine);
         
@@ -301,12 +302,12 @@ int filesDeleted(const char* dirPath, const char* bckpInfoPath) {
         
         free(fileLine);
         free(fileFromBckpInfo);
-        if(fileExists(filePath) == 1){
-            return 0;
+        if( ! fileExists(filePath) ){
+            return 1;
         }
     }
     
-    return 1;
+    return 0;
     
 }
 

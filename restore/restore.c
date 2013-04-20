@@ -101,7 +101,7 @@ int main (int argc, const char * argv[], char* envp[])
         exit(1);
     }
     
-    pwd = getenv("PWD");
+    char * pwd = getenv("PWD");
     DIR *backupDir;
     DIR *restoreDir;
     

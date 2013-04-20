@@ -30,8 +30,6 @@
  dir3 is the directory where the backed up files are going to be restored.
  */
 
-char * pwd; /**< The environment variable PWD, indicating the program working directory. */
-
 /**
  * Prints all valid backups.
  * @param backupsArray The backup array (strings of the backup dates).

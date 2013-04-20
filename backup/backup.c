@@ -118,7 +118,7 @@ int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char*
     
     bool restorePointCreated = false;
     
-    if (filesDeleted(monitoredPath, previousBckpInfo) == 0) {
+    if ( filesDeleted(monitoredPath, previousBckpInfo) ) {
         bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
         restorePointCreated = true;
         printf("Detected file deletion: new restore point created\n");
