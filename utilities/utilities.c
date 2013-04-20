@@ -12,12 +12,12 @@
 
 char** createStrArray(unsigned int numberOfStrings, unsigned int sizeOfStrings) {
     
-    char ** strArray = malloc ( numberOfStrings * sizeof ( char* ) );
+    char ** strArray = malloc( numberOfStrings * sizeof(char*) );
     
     int i;
     
     for ( i = 0 ; i < numberOfStrings; ++i ) {
-        strArray[i] = malloc ( sizeOfStrings * sizeof ( char ) );
+        strArray[i] = malloc( sizeOfStrings * sizeof(char) );
     }
     
     return strArray;
@@ -40,8 +40,8 @@ void parsePath(char* path) {
     if(path == NULL)
         return;
     
-    int i = 0;
-    for(; i < strlen(path); i++)
+    int i;
+    for(i = 0; i < strlen(path); i++)
         if(path[i] == '\n')
             path[i] = 0;
 }
@@ -50,26 +50,24 @@ unsigned int convertToUnsignedInt(char c) {
     return c - '0';
 }
 
-int getNumOfLines ( const char * filePath )
-{
+int getNumOfLines(const char * filePath) {
     int file;
-    file = open ( filePath, O_RDONLY );
+    file = open(filePath, O_RDONLY);
     if ( file == -1 ) {
-        perror ( filePath );
-        exit ( 5 );
+        perror(filePath);
+        exit(5);
     }
     
     unsigned char ch[1];
+    // the number of lines should start at 1
+    // but for code simplification purposes, the bckpinfo stores an extra empty line, so we can start at 0
     int number_of_lines = 0;
     
-    while ( read ( file, ch, 1 ) > 0 ) {
+    while ( read(file, ch, 1) > 0 ) {
         if ( ch[0] == '\n' ) {
             number_of_lines++;
         }
     }
-    
-    // the last line doesn't have a '\n' at the end of the file.
-    number_of_lines++;
     
     if(close(file) != 0) {
         printf("Problem closing file. Error number %d: %s\n", errno, strerror(errno));
@@ -79,26 +77,25 @@ int getNumOfLines ( const char * filePath )
     return number_of_lines;
 }
 
-int getNumOfDirectories ( DIR * folderDir )
-{
+int getNumOfDirectories(DIR * folderDir) {
     struct dirent *direntp;
     struct stat stat_buf;
     int n = 0;
     
-    while ( ( direntp = readdir ( folderDir ) ) != NULL ) {
-        if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
-            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
+    while ( ( direntp = readdir(folderDir) ) != NULL ) {
+        if ( stat(direntp->d_name, &stat_buf) != 0 ) {
+            printf( "Error number %d: %s\n", errno, strerror(errno) );
             return -1;
         }
-        if ( S_ISDIR ( stat_buf.st_mode )
+        if ( S_ISDIR(stat_buf.st_mode)
             // and ignore the "." and ".."
-            && strcmp ( direntp->d_name, "." )
-            && strcmp ( direntp->d_name, ".." ) ) {
+            && strcmp(direntp->d_name, ".")
+            && strcmp(direntp->d_name, "..") ) {
             n++;
         }
     }
     
-    rewinddir ( folderDir );
+    rewinddir(folderDir);
     return n;
 }
 
@@ -108,15 +105,15 @@ int getNumOfBackups(DIR * folderDir){
     int n = 0;
     char * folderName = malloc(MAX_LEN * sizeof(char));
     
-    while ( ( direntp = readdir ( folderDir ) ) != NULL ) {
-        if ( stat ( direntp->d_name, &stat_buf ) != 0 ) {
-            printf ( "Error number %d: %s\n", errno, strerror ( errno ) );
+    while ( ( direntp = readdir(folderDir) ) != NULL ) {
+        if ( stat(direntp->d_name, &stat_buf) != 0 ) {
+            printf("Error number %d: %s\n", errno, strerror(errno) );
             return -1;
         }
-        if ( S_ISDIR ( stat_buf.st_mode )
+        if ( S_ISDIR(stat_buf.st_mode)
             // and ignore the "." and ".."
-            && strcmp ( direntp->d_name, "." )
-            && strcmp ( direntp->d_name, ".." ) ) {
+            && strcmp(direntp->d_name, ".")
+            && strcmp(direntp->d_name, "..") ) {
             
             if ( isBackupString(direntp->d_name) )
                 n++;
@@ -124,15 +121,15 @@ int getNumOfBackups(DIR * folderDir){
     }
     
     free(folderName);
-    rewinddir ( folderDir );
+    rewinddir(folderDir);
     return n;
 }
 
-int isBackupString(char * string){
+int isBackupString(char * string) {
     if (strlen(string) != DATE_LEN-1)
         return 0;
     
-    char * stringcopy = malloc(DATE_LEN * sizeof(char));
+    char * stringcopy = malloc( DATE_LEN * sizeof(char) );
     strcpy(stringcopy, string);
     char * currentNumber;
     currentNumber = strtok(stringcopy, "_");
@@ -160,20 +157,19 @@ int isBackupString(char * string){
 }
 
 
-char* getLineAt ( unsigned int line, const char * filePath )
-{
+char* getLineAt(unsigned int line, const char * filePath) {
     
-    if ( line <= 0 || line > getNumOfLines ( filePath ) ) {
-        printf ( "Tried to access unexistent line at %s\n", filePath );
-        exit ( -1 );
+    if ( line <= 0 || line > getNumOfLines(filePath) ) {
+        printf("Tried to access unexistent line at %s\n", filePath);
+        exit(-1);
     }
     
     FILE * file;
-    file = fopen ( filePath, "r" );
+    file = fopen(filePath, "r");
     
     if ( file == NULL ) {
-        perror ( filePath );
-        exit ( 5 );
+        perror(filePath);
+        exit(5);
     }
     
     char * str = malloc( MAX_LEN * sizeof(char) );
@@ -190,25 +186,25 @@ char* getLineAt ( unsigned int line, const char * filePath )
     return str;
 }
 
-char* getBackupInfo ( const char* restoreDate ) {
+char* getBackupInfo( const char* restoreDate ) {
     char * backupInfoPath = malloc(MAX_LEN * sizeof(char) );
     sprintf ( backupInfoPath, "%s/%s", restoreDate, BACKUPINFO );
     return backupInfoPath;
 }
 
-char* getBackupFullPath (const char* path, const char* backupPath ) {
+char* getBackupFullPath( const char* path, const char* backupPath ) {
     char * backupFullPath = malloc(MAX_LEN * sizeof(char) );
     sprintf ( backupFullPath, "%s/%s", path, backupPath );
     return backupFullPath;
 }
 
-char* getFileFullPath (const char* path, const char* fileName) {
+char* getFileFullPath( const char* path, const char* fileName ) {
     char * backupFullPath = malloc(MAX_LEN * sizeof(char) );
     sprintf ( backupFullPath, "%s/%s", path, fileName );
     return backupFullPath;
 }
 
-int copyFile ( const char* fromPath, const char* toPath ) {
+int copyFile( const char* fromPath, const char* toPath ) {
     
     pid_t pid;
     pid = fork();
@@ -220,10 +216,9 @@ int copyFile ( const char* fromPath, const char* toPath ) {
     }
     
     return(0);
-    
 }
 
-char* getBackupPathFromInfoLine(const char* bckpInfoLine) {
+char* getBackupPathFromInfoLine( const char* bckpInfoLine ) {
     
     if(strlen(bckpInfoLine) < DATE_LEN - 1) {
         return NULL;
@@ -237,7 +232,7 @@ char* getBackupPathFromInfoLine(const char* bckpInfoLine) {
     return backupPath;
 }
 
-char* getFileNameFromInfoLine(const char* bckpInfoLine) {
+char* getFileNameFromInfoLine( const char* bckpInfoLine ) {
     
     if(strlen(bckpInfoLine) <= DATE_LEN - 1) {
         fprintf(stderr, "Invalid filename\n");
