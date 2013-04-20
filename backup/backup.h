@@ -34,7 +34,7 @@
  dt is the interval between two consecutive scannings of dir1.
  */
 
-char * path; /**< The environment variable PWD, indicating the current working directory of the program. */
+char * pwd; /**< The environment variable PWD, indicating the program working directory. */
 
 /**
  * Handles any received USR1 signal by waiting for all child processes to end first, and only then the program will terminate.
@@ -56,18 +56,38 @@ void sigchld_handler(int signo);
 char* fullBackup(const char* monitoredPath, const char* backupPath, time_t* backupDate);
 
 /**
- * Creates a directory 
+ * Creates a directory named according to the current time. For example: "backupPath/2013_04_13_14_56_19".
+ * Also creates the bckpinfo file in the new folder.
+ * @param backupPath The path that is used to create the backup files.
+ * @param updateTime The time struct that will be updated with the current time.
+ * @param restorePoint Pointer to the string that will contain the restore point name. Example: "2013_04_13_14_56_19".
+ * @param latestRestorePoint A string that will be updated with the created backup folder path. For example: "backupPath/2013_04_13_14_56_19".
+ * @return A file descriptor for the new bckpinfo.
  */
 int createRestorePoint(const char* backupPath,
                        time_t * updateTime,
                        char ** restorePoint,
                        char* latestRestorePoint);
-
+/**
+ * Checks for any modified, deleted or added files and performs an incremental backup.
+ * @param monitoredPath The path that contains the regular files.
+ * @param backupPath The path that is used to create the backup files.
+ * @param latestRestorePoint A string that contains the latest restore point path name. For example: "backupPath/2013_04_13_14_56_19". If a backup is performed, this string will be updated.
+ * @param lastUpdateTime A time struct with the date of the latest restore point. This is used to check if any files were modified beyond this date.
+ * @return 1 If a restore point was created, 0 if not.
+ */
 int backupModifiedFiles(const char* monitoredPath,
                         const char* backupPath,
                         char* latestRestorePoint,
                         time_t* lastUpdateTime);
 
+/**
+ * The program main function.
+ * @param argc Argument count.
+ * @param argv The program arguments.
+ * @param envp The environmental parameters.
+ * @return 0 if successful.
+ */
 int main(int argc, const char * argv[], char* envp[]);
 
 
