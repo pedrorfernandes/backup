@@ -52,7 +52,7 @@ char** getAndPrintFolders(DIR * backupDir) {
     
     rewinddir(backupDir);
     
-    qsort(backups, numberOfBackups, sizeof(char *), cmpBackupDates);
+    qsort(backups, numberOfBackups, sizeof (char *), cmpBackupDates);
     printAvailableBackups(backups, numberOfBackups);
     return backups;
 }
@@ -112,7 +112,10 @@ int main (int argc, const char * argv[], char* envp[])
     
     if ( ( restoreDir = opendir(argv[2]) ) == NULL ) {
         // if restore dir doesnt exist, create it
-        mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if(mkdir(argv[2], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
+            perror("Problem creating restore destination");
+            exit(5);
+        }
         if ( ( restoreDir = opendir(argv[2]) ) == NULL ) {
             perror(argv[2]);
             closedir(backupDir);
@@ -124,7 +127,10 @@ int main (int argc, const char * argv[], char* envp[])
     
     printf("The following restore points are available:\n");
     // moving into backupDir will allow directory reading
-    chdir(argv[1]);
+    if(chdir(argv[1]) != 0) {
+        perror(argv[1]);
+        exit(8);
+    }
     
     char** backups = getAndPrintFolders(backupDir);
     int numberOfBackups = getNumOfBackups(backupDir);
@@ -145,7 +151,10 @@ int main (int argc, const char * argv[], char* envp[])
     char* fullBckpInfoPath = getBackupInfo(selectedBckpPath);
     
     // moving out of the backupDir
-    chdir(pwd);
+    if(chdir(pwd) != 0) {
+        perror(pwd);
+        exit(8);
+    }
     
     DIR *selectedBackup;
     if ( ( selectedBackup = opendir(selectedBckpPath) ) == NULL ) {
