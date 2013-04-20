@@ -19,9 +19,8 @@ void printAvailableBackups(char **backupsArray, size_t numberOfBackups)
     for(; i<numberOfBackups; i++){
         datestr = backupDateToReadableDate(backupsArray[i]);
         printf("%d - %s\n", i+1, datestr);
+        free(datestr);
     }
-    
-    free(datestr);
 }
 
 char** getAndPrintFolders(DIR * backupDir) {
@@ -194,14 +193,16 @@ int main (int argc, const char * argv[], char* envp[])
         }
         
     } else if ( lineNumber > 0 && lineNumber <= numberOfFiles ) {
-        char* destFilePath = getFileFullPath( argv[2], getFileNameFromInfoLine(getLineAt(lineNumber, fullBckpInfoPath)) );
-        char* originFilePath = getFileFullPath( argv[1], getLineAt(lineNumber, fullBckpInfoPath) );
-        copyFile(originFilePath, destFilePath);
-        
-        char* fileName = getFileNameFromInfoLine( getLineAt(lineNumber, fullBckpInfoPath) );
-        destFilePath = getFileFullPath(argv[2], fileName);
-        printf("Restored %s successfully!\n", fileName);
+        char* fileRestorePath = getLineAt(lineNumber, fullBckpInfoPath);
+        char* fileName = getFileNameFromInfoLine(fileRestorePath);
+        char* destFilePath = getFileFullPath( argv[2], fileName );
+        char* originFilePath = getFileFullPath( argv[1], fileRestorePath );
+        if(copyFile(originFilePath, destFilePath) == 0)
+            printf("Restored %s successfully!\n", fileName);
+        else
+            printf("Error copying %s!\n", fileName);
 
+        free(fileRestorePath);
         free(fileName);
         free(destFilePath);
         free(originFilePath);
