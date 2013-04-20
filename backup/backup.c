@@ -279,10 +279,6 @@ int backupModifiedFiles(const char* monitoredPath, const char* backupPath, char*
                     if (fileLine == NULL) {
                         // some file that is not in the latest bckpinfo showed up! We must backup this.
                         bckpinfo = createRestorePoint(backupPath, &thisUpdateTime, &restorePoint, latestRestorePoint);
-                        if (chdir(monitoredPath) != 0) {
-                            perror("Problem changing back into the monitored path");
-                            exit(8);
-                        }
                         restorePointCreated = true;
                         rewinddir(monitoredDir);
                     }
